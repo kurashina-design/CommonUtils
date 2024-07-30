@@ -7,7 +7,7 @@
     <artifactId>common-utils</artifactId>
     <version>${revision}-SNAPSHOT</version>
     <properties>
-        <revision>3.3.2</revision>
+        <revision>3.3.0</revision>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
