@@ -1,5 +1,8 @@
 package jp.kurashina.commons.util;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class ObjectUtils {
 
     @SuppressWarnings("unchecked")

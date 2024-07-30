@@ -1,9 +1,11 @@
 package jp.kurashina.commons.util;
 
 import jp.kurashina.commons.dto.ResponseField;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Component
 public class ResponseFieldUtils {
 
     public static boolean isEmpty(ResponseField responseField) {
