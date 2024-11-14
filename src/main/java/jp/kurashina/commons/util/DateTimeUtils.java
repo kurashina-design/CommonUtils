@@ -5,10 +5,9 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Date;
 
 @Component
-public class DateTimeUtil {
+public class DateTimeUtils {
 
     public static ZonedDateTime asiaTokyo(int year, int month, int day, int hour, int minute, int second) {
         LocalDateTime localDateTime = LocalDateTime.of(year, month, day, hour, minute, second);
