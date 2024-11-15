@@ -113,6 +113,7 @@ public class ResponseField implements Serializable {
     }
 
     public boolean containsAll(String... args) {
-        return CollectionUtils.containsAll((Collection<?>) this, args);
+        if (CollectionUtils.isEmpty(this.fields)) return false;
+        return CollectionUtils.containsAll((Collection<?>) this.fields, args);
     }
 }
