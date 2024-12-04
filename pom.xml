@@ -7,7 +7,7 @@
     <artifactId>common-utils</artifactId>
     <version>${revision}-1</version>
     <properties>
-        <revision>3.3.5</revision>
+        <revision>3.4.0</revision>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
