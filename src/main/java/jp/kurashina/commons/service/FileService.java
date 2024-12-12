@@ -1,24 +1,24 @@
-package jp.kurashina.commons.util;
+package jp.kurashina.commons.service;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-@Component
-public class FileUtils {
+@Service
+public class FileService {
 
-    private static final ResourceLoader resourceLoader;
+    private final ResourceLoader resourceLoader;
 
-    static {
-        resourceLoader = null;
+    public FileService(ResourceLoader resourceLoader) {
+        this.resourceLoader = resourceLoader;
     }
 
-    public static String getStringByFilename(String filename) throws IOException {
+    public String getStringByFilename(String filename) throws IOException {
         Resource resource = resourceLoader.getResource("classpath:" + filename);
         InputStream inputStream = resource.getInputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -31,7 +31,7 @@ public class FileUtils {
         return stringBuilder.toString();
     }
 
-    public static InputStream getInputStreamByFilename(String filename) throws IOException {
+    public InputStream getInputStreamByFilename(String filename) throws IOException {
         Resource resource = resourceLoader.getResource("classpath:" + filename);
         return resource.getInputStream();
     }
