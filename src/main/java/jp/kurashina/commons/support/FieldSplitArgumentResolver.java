@@ -31,9 +31,7 @@ public class FieldSplitArgumentResolver implements HandlerMethodArgumentResolver
         }
 
         // 結果をソートして返す
-        return fieldList.stream()
-                .sorted(Comparator.comparingInt(String::length))
-                .toList();
+        return fieldList.stream().toList();
     }
 
     private String replaceCommasWithinBrackets(String source) {
