@@ -4,10 +4,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 
 @Service
 public class FileService {
@@ -35,4 +32,10 @@ public class FileService {
         Resource resource = resourceLoader.getResource("classpath:" + filename);
         return resource.getInputStream();
     }
+
+    public File getFileByFilename(String filename) throws IOException {
+        Resource resource = resourceLoader.getResource("classpath:" + filename);
+        return resource.getFile();
+    }
+
 }
