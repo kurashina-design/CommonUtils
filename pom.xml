@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>jp.kurashina</groupId>
     <artifactId>common-utils</artifactId>
-    <version>${revision}-3</version>
+    <version>${revision}</version>
     <properties>
-        <revision>3.4.1</revision>
+        <revision>3.4.2</revision>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
