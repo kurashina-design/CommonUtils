@@ -12,4 +12,12 @@ public class StringUtils {
         return Arrays.stream(source.split(",")).map(String::trim).toList();
     }
 
+    public static boolean isEmpty(CharSequence cs) {
+        return org.apache.commons.lang3.StringUtils.isEmpty(cs);
+    }
+
+    public static boolean isNotEmpty(CharSequence cs) {
+        return org.apache.commons.lang3.StringUtils.isNotEmpty(cs);
+    }
+
 }
