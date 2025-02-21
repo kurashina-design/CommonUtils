@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class StringUtils {
@@ -18,6 +19,13 @@ public class StringUtils {
 
     public static boolean isNotEmpty(CharSequence cs) {
         return org.apache.commons.lang3.StringUtils.isNotEmpty(cs);
+    }
+
+    public static String extractNumbers(CharSequence cs) {
+        return cs.chars()
+                .filter(Character::isDigit)
+                .mapToObj(c -> String.valueOf((char) c))
+                .collect(Collectors.joining());
     }
 
 }
