@@ -21,6 +21,10 @@ public class StringUtils {
         return org.apache.commons.lang3.StringUtils.isNotEmpty(cs);
     }
 
+    public static boolean join(CharSequence... elements) {
+        return org.apache.commons.lang3.StringUtils.join(elements) != null;
+    }
+
     public static String extractNumbers(CharSequence cs) {
         return cs.chars()
                 .filter(Character::isDigit)
