@@ -3,6 +3,7 @@ package jp.kurashina.commons.util;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,8 +22,12 @@ public class StringUtils {
         return org.apache.commons.lang3.StringUtils.isNotEmpty(cs);
     }
 
-    public static boolean join(CharSequence... elements) {
-        return org.apache.commons.lang3.StringUtils.join(elements) != null;
+    public static String join(Object[] array, String delimiter) {
+        return org.apache.commons.lang3.StringUtils.join(array, delimiter);
+    }
+
+    public static String join(Iterable<?> iterable, String separator) {
+        return org.apache.commons.lang3.StringUtils.join(iterable, separator);
     }
 
     public static String extractNumbers(CharSequence cs) {
