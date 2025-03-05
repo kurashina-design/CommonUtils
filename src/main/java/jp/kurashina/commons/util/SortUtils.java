@@ -78,12 +78,10 @@ public class SortUtils {
     public static Sort getSort(List<String> sortList) {
         if (CollectionUtils.isNotEmpty(sortList)) {
             if (sortList.size() == 1) {
-                return Sort.by(getOrderByConvertingPrefix(sortList.get(0)));
+                return Sort.by(getOrderByConvertingPrefix(sortList.getFirst()));
             } else {
                 List<Sort.Order> orderList = new ArrayList<>();
-                sortList.forEach(s -> {
-                    orderList.add(getOrderByConvertingPrefix(s));
-                });
+                sortList.forEach(s -> orderList.add(getOrderByConvertingPrefix(s)));
                 return Sort.by(orderList);
             }
         }
