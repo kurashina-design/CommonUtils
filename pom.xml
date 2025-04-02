@@ -5,15 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>jp.kurashina</groupId>
     <artifactId>common-utils</artifactId>
-    <version>${revision}-5</version>
+    <version>${revision}</version>
     <properties>
-        <revision>3.4.3</revision>
+        <revision>3.4.4</revision>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <commons-collections4.version>4.4</commons-collections4.version>
         <commons-lang3.version>3.17.0</commons-lang3.version>
-        <lombok.version>1.18.36</lombok.version>
+        <lombok.version>1.18.38</lombok.version>
     </properties>
 
     <dependencies>
