@@ -1,6 +1,6 @@
 package jp.kurashina.commons.support;
 
-import jp.kurashina.commons.annotation.QueryFieldsVariable;
+import jp.kurashina.commons.annotation.QueryFields;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -100,14 +100,14 @@ public class FieldSplitArgumentResolver implements HandlerMethodArgumentResolver
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(QueryFieldsVariable.class);
+        return parameter.hasParameterAnnotation(QueryFields.class);
     }
 
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
                                   NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
 
-        QueryFieldsVariable annotation = parameter.getParameterAnnotation(QueryFieldsVariable.class);
+        QueryFields annotation = parameter.getParameterAnnotation(QueryFields.class);
         String name = Objects.requireNonNull(annotation).name();
         if (name == null || name.isEmpty()) {
             name = "fields";
