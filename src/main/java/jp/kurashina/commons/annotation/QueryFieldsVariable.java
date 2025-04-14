@@ -13,14 +13,14 @@ public @interface QueryFieldsVariable {
      * Alias for {@link #name}.
      */
     @AliasFor("name")
-    String value() default "";
+    String value() default "fields";
 
     /**
      * The name of the request parameter to bind to.
      * <p>Defaults to "fields."</p>
      */
     @AliasFor("value")
-    String name() default "";
+    String name() default "fields";
 
     /**
      * Whether the query variable is required.
