@@ -1,4 +1,4 @@
-package jp.kurashina.commons.support;
+package jp.kurashina.commons.annotation.support;
 
 import jp.kurashina.commons.annotation.QueryFields;
 import org.springframework.core.MethodParameter;
@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class FieldSplitArgumentResolver implements HandlerMethodArgumentResolver {
+public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolver {
 
     public List<String> normalizeBracketFields(String source) {
         // 前処理: 空白を削除
