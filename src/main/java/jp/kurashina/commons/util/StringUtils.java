@@ -37,4 +37,8 @@ public class StringUtils {
                 .collect(Collectors.joining());
     }
 
+    public static String strip(String source) {
+        return org.apache.commons.lang3.StringUtils.strip(source, " \u3000\t\n\r\f"); // 半角SP、全角SP、タブ、改行、復帰、改ページ
+    }
+
 }
