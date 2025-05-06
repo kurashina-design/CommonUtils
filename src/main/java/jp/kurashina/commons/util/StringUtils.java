@@ -42,7 +42,10 @@ public class StringUtils {
     }
 
     public static String htmlString(String source) {
-        return source.replaceAll(">\\s+<", "><").replaceAll("[\\s]{2,}", " ").replaceAll("　+", "").replaceAll("[\\r\\n]+", "");
+        return source.replaceAll(">\\s*<", "><") // タグ間の0個以上の空白を削除
+                .replaceAll("\\s{2,}", " ")
+                .replaceAll("　+", "")
+                .replaceAll("[\\r\\n]+", "");
     }
 
 }
