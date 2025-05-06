@@ -41,4 +41,8 @@ public class StringUtils {
         return org.apache.commons.lang3.StringUtils.strip(source, " \u3000\t\n\r\f"); // 半角SP、全角SP、タブ、改行、復帰、改ページ
     }
 
+    public static String htmlString(String source) {
+        return source.replaceAll(">\\s+<", "><").replaceAll("[\\s]{2,}", " ").replaceAll("　+", "").replaceAll("[\\r\\n]+", "");
+    }
+
 }
