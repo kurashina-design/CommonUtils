@@ -168,6 +168,11 @@ public class EntityFieldUtils {
 
         Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields) {
+            if (Collection.class.isAssignableFrom(field.getType())) {
+                System.out.println(field.getName() + ": (コレクション型のためスキップ)");
+                continue; // コレクション型の場合は処理をスキップ
+            }
+
             field.setAccessible(true); // privateフィールドにもアクセスできるようにする
             try {
                 String fieldName = field.getName();
