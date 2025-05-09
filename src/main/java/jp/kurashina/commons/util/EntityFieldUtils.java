@@ -156,4 +156,28 @@ public class EntityFieldUtils {
         excludes.forEach(newFields::remove);
         return newFields;
     }
+
+    public static void printEntityFields(Object entity) {
+        if (entity == null) {
+            System.out.println("Entity is null.");
+            return;
+        }
+
+        Class<?> clazz = entity.getClass();
+        System.out.println("--- " + clazz.getSimpleName() + " ---");
+
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field field : fields) {
+            field.setAccessible(true); // privateフィールドにもアクセスできるようにする
+            try {
+                String fieldName = field.getName();
+                Object fieldValue = field.get(entity);
+                System.out.println(fieldName + ": " + fieldValue);
+            } catch (IllegalAccessException e) {
+                System.err.println("フィールドへのアクセスに失敗しました: " + field.getName());
+            }
+        }
+        System.out.println("----------------------");
+    }
+
 }
