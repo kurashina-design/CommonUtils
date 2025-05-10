@@ -7,10 +7,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.chrono.JapaneseChronology;
 import java.time.chrono.JapaneseDate;
 import java.time.chrono.JapaneseEra;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.TextStyle;
+import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -41,20 +44,20 @@ public class DateTimeUtils {
         // 全角スペース・半角スペースの除去
         String normalizedSource = source.replace(" ", "").replaceAll("　", "");
 
-        // JapaneseEraから全ての元号を取得して正規表現パターンを構築
-        String eraPattern = Arrays.stream(JapaneseEra.values())
-                .map(era -> era.getDisplayName(TextStyle.FULL, Locale.JAPAN))
-                .collect(Collectors.joining("|"));
-
         // 年月の数字の先頭の0を除去
         normalizedSource = normalizedSource
                 .replaceAll("(?<=年)0(\\d)", "$1")  // 年の後の0を除去
-                .replaceAll("(?<=月)0(\\d)", "$1")  // 月の後の0を除去
-                .replaceAll("(" + eraPattern + ")0(\\d)", "$1$2"); // 元号の後の0を除去
+                .replaceAll("(?<=月)0(\\d)", "$1");  // 月の後の0を除去
 
-        DateTimeFormatter japaneseFormatter = DateTimeFormatter.ofPattern("GGyy年M月", Locale.JAPAN);
+        DateTimeFormatter japaneseFormatter = new DateTimeFormatterBuilder()
+                .append(DateTimeFormatter.ofPattern("G", Locale.JAPAN))
+                .append(DateTimeFormatter.ofPattern("y年M月", Locale.JAPAN))
+                .toFormatter()
+                .withChronology(JapaneseChronology.INSTANCE)
+                .withLocale(Locale.JAPAN);
+
         try {
-            java.time.temporal.TemporalAccessor temporalAccessor = japaneseFormatter.parse(normalizedSource);
+            TemporalAccessor temporalAccessor = japaneseFormatter.parse(normalizedSource);
             JapaneseDate japaneseDate = JapaneseDate.from(temporalAccessor);
             return LocalDate.from(japaneseDate);
         } catch (Exception e) {
