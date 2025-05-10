@@ -15,7 +15,9 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.TextStyle;
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
@@ -40,7 +42,7 @@ public class DateTimeUtils {
         return utc(year, month, day, 0, 0, 0);
     }
 
-    public static LocalDate convertJapaneseToGregorian(String source) {
+    public static Map<String, Integer> convertJapaneseToGregorian(String source) {
         // 全角スペース・半角スペースの除去
         String normalizedSource = source.replace(" ", "").replaceAll("　", "");
 
@@ -48,10 +50,11 @@ public class DateTimeUtils {
         normalizedSource = normalizedSource
                 .replaceAll("(?<=年)0(\\d)", "$1")  // 年の後の0を除去
                 .replaceAll("(?<=月)0(\\d)", "$1");  // 月の後の0を除去
+        normalizedSource += "1日";
 
         DateTimeFormatter japaneseFormatter = new DateTimeFormatterBuilder()
                 .append(DateTimeFormatter.ofPattern("G", Locale.JAPAN))
-                .append(DateTimeFormatter.ofPattern("y年M月", Locale.JAPAN))
+                .append(DateTimeFormatter.ofPattern("y年M月d日", Locale.JAPAN))
                 .toFormatter()
                 .withChronology(JapaneseChronology.INSTANCE)
                 .withLocale(Locale.JAPAN);
@@ -59,13 +62,14 @@ public class DateTimeUtils {
         try {
             TemporalAccessor temporalAccessor = japaneseFormatter.parse(normalizedSource);
             JapaneseDate japaneseDate = JapaneseDate.from(temporalAccessor);
-            return LocalDate.from(japaneseDate);
+            LocalDate localDate = LocalDate.from(japaneseDate);
+            Map<String, Integer> resultMap = new HashMap<>();
+            resultMap.put("year", localDate.getYear());
+            resultMap.put("month", localDate.getMonthValue());
+            return resultMap;
         } catch (Exception e) {
             log.warn("和暦の変換に失敗しました: {}", source, e);
             return null;
         }
     }
-
-
-
 }
