@@ -157,7 +157,7 @@ public class EntityFieldUtils {
         return newFields;
     }
 
-    public void printEntityFields(Object obj) {
+    public static void printEntityFields(Object obj) {
         if (obj == null) {
             System.out.println("null");
             return;
