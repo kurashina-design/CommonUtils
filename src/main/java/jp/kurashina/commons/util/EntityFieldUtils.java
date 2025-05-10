@@ -157,32 +157,20 @@ public class EntityFieldUtils {
         return newFields;
     }
 
-    public static void printEntityFields(Object entity) {
-        if (entity == null) {
-            System.out.println("Entity is null.");
+    public void printEntityFields(Object obj) {
+        if (obj == null) {
+            System.out.println("null");
             return;
         }
 
-        Class<?> clazz = entity.getClass();
-        System.out.println("--- " + clazz.getSimpleName() + " ---");
+        String toStringResult = obj.toString();
+        String[] lines = toStringResult.split(","); // Windows, Mac, Linux の改行コードに対応
 
-        Field[] fields = clazz.getDeclaredFields();
-        for (Field field : fields) {
-            if (Collection.class.isAssignableFrom(field.getType())) {
-                System.out.println(field.getName() + ": (コレクション型のためスキップ)");
-                continue; // コレクション型の場合は処理をスキップ
-            }
-
-            field.setAccessible(true); // privateフィールドにもアクセスできるようにする
-            try {
-                String fieldName = field.getName();
-                Object fieldValue = field.get(entity);
-                System.out.println(fieldName + ": " + fieldValue);
-            } catch (IllegalAccessException e) {
-                System.err.println("フィールドへのアクセスに失敗しました: " + field.getName());
-            }
+        System.out.println("--- " + obj.getClass().getSimpleName() + ".toString() の出力 ---");
+        for (String line : lines) {
+            System.out.println(line.trim());
         }
-        System.out.println("----------------------");
+        System.out.println("--------------------------------------------------");
     }
 
 }
