@@ -8,8 +8,12 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.chrono.JapaneseDate;
+import java.time.chrono.JapaneseEra;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
+import java.util.Arrays;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -34,16 +38,31 @@ public class DateTimeUtils {
     }
 
     public static LocalDate convertJapaneseToGregorian(String source) {
+        // 全角スペース・半角スペースの除去
+        String normalizedSource = source.replace(" ", "").replaceAll("　", "");
+
+        // JapaneseEraから全ての元号を取得して正規表現パターンを構築
+        String eraPattern = Arrays.stream(JapaneseEra.values())
+                .map(era -> era.getDisplayName(TextStyle.FULL, Locale.JAPAN))
+                .collect(Collectors.joining("|"));
+
+        // 年月の数字の先頭の0を除去
+        normalizedSource = normalizedSource
+                .replaceAll("(?<=年)0(\\d)", "$1")  // 年の後の0を除去
+                .replaceAll("(?<=月)0(\\d)", "$1")  // 月の後の0を除去
+                .replaceAll("(" + eraPattern + ")0(\\d)", "$1$2"); // 元号の後の0を除去
+
         DateTimeFormatter japaneseFormatter = DateTimeFormatter.ofPattern("GGyy年M月", Locale.JAPAN);
         try {
-            java.time.temporal.TemporalAccessor temporalAccessor = japaneseFormatter.parse(source);
+            java.time.temporal.TemporalAccessor temporalAccessor = japaneseFormatter.parse(normalizedSource);
             JapaneseDate japaneseDate = JapaneseDate.from(temporalAccessor);
             return LocalDate.from(japaneseDate);
         } catch (Exception e) {
-            // エラーログを出力するか、より具体的な例外処理を行う
             log.warn("和暦の変換に失敗しました: {}", source, e);
             return null;
         }
     }
+
+
 
 }
