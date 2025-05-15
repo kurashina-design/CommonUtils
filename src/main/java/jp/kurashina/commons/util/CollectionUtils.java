@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -45,6 +46,30 @@ public class CollectionUtils {
     public static <E> Collection <E> removeAll(Collection <E> collection, Collection <?> remove) {
         return org.apache.commons.collections4.CollectionUtils.removeAll(collection, remove);
     }
+
+    public static <T> T getRandomElement(Collection<T> collection) {
+        if (collection == null || collection.isEmpty()) {
+            return null;
+        }
+
+        // Collectionはインデックスでのアクセスができないため、
+        // ストリームを使用してランダムな位置までスキップする方法か、
+        // 配列やリストに変換する方法のいずれかを選択する必要があります
+
+        // 方法1: 配列に変換して取得
+        Object[] array = collection.toArray();
+        Random random = new Random();
+        return (T) array[random.nextInt(array.length)];
+
+        // 方法2: ストリームを使用
+        /*
+        return collection.stream()
+                .skip(new Random().nextInt(collection.size()))
+                .findFirst()
+                .orElse(null);
+        */
+    }
+
 }
 
 
