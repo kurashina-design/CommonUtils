@@ -11,9 +11,9 @@ import java.util.Map;
 public class CountResponse implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = -7167133282248957103L;
+    private static final long serialVersionUID = 8363659727962237726L;
 
-    private int count;
+    private long count;
     private Map<String, Boolean> criteria = new HashMap<>();
 
 }
