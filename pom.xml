@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>jp.kurashina</groupId>
     <artifactId>common-utils</artifactId>
-    <version>${revision}</version>
+    <version>${revision}-1</version>
     <properties>
         <revision>3.5.3</revision>
         <maven.compiler.source>21</maven.compiler.source>
@@ -33,12 +33,6 @@
             <version>${revision}</version>
             <scope>provided</scope>
         </dependency>
-<!--        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-commons</artifactId>
-            <version>${revision}</version>
-            <scope>provided</scope>
-        </dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
