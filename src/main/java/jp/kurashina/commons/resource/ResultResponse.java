@@ -10,9 +10,15 @@ public class ResultResponse<T> {
     private String result;
     private T data;
 
+    public ResultResponse() {}
+
     public ResultResponse(String result, T data) {
         this.result = result;
         this.data = data;
+    }
+
+    public ResultResponse(String result) {
+        this.result = result;
     }
 
 }
