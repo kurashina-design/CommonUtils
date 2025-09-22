@@ -49,6 +49,13 @@ public class StringUtils {
         return normalized.replaceAll("[^\\p{ASCII}]", "").trim(); // ASCII以外を除去
     }
 
+    public static String normalizeExceptParentheses(String input) {
+        //正規表現で不要な全角文字を除外するフィルタを追加します。
+        if (input == null) return null;
+        String normalized = Normalizer.normalize(input, Normalizer.Form.NFKC);
+        return normalized.replaceAll("\\(", "（").replaceAll("\\)", "）");
+    }
+
     public static String htmlString(String source) {
         return source.replaceAll(">\\s*<", "><") // タグ間の0個以上の空白を削除
                 .replaceAll("\\s{2,}", " ")
