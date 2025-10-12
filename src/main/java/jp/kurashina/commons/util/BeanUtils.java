@@ -2,6 +2,7 @@ package jp.kurashina.commons.util;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,10 @@ public class BeanUtils {
 
     public static void copyProperties(Object source, Object target) {
         org.springframework.beans.BeanUtils.copyProperties(source, target);
+    }
+
+    public static void copyPatchProperties(Object source, Object target) {
+        org.springframework.beans.BeanUtils.copyProperties(source, target, getNullPropertyNames(source));
     }
 
     public static void copyProperties(Object source, Object target, String... ignoreProperties) {
@@ -88,6 +93,20 @@ public class BeanUtils {
         }
         fields.add(fieldName);
         fieldMap.put(entityName, fields);
+    }
+
+    private static String[] getNullPropertyNames(Object source) {
+        final BeanWrapper src = new BeanWrapperImpl(source);
+        java.beans.PropertyDescriptor[] pds = src.getPropertyDescriptors();
+
+        Set<String> emptyNames = new HashSet<>();
+        for (java.beans.PropertyDescriptor pd : pds) {
+            Object srcValue = src.getPropertyValue(pd.getName());
+            if (srcValue == null) {
+                emptyNames.add(pd.getName());
+            }
+        }
+        return emptyNames.toArray(new String[0]);
     }
 
     public static Set<String> generateSortKeySet(Set<String> setOfSortKeySources) {
