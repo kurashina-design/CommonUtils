@@ -87,6 +87,16 @@ public class CorporateNameNormalizer {
         return finalResult.trim();
     }
 
+    public static String retrieveDisplayName(String corporateName) {
+        corporateName = normalizeCorporateName(corporateName);
+        for (String type : CORPORATE_TYPES) {
+            if (corporateName.contains(type)) {
+                return corporateName.replace(type, "");
+            }
+        }
+        return corporateName;
+    }
+
     public List<String> getCorporateTypes() {
         return CORPORATE_TYPES;
     }

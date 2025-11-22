@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>jp.kurashina</groupId>
     <artifactId>common-utils</artifactId>
-    <version>${revision}-13</version>
+    <version>${revision}-14</version>
     <properties>
         <revision>3.5.3</revision>
         <maven.compiler.source>21</maven.compiler.source>
