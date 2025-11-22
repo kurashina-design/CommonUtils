@@ -52,8 +52,8 @@ public class CorporateNameNormalizer {
                 .map(Pattern::quote)
                 .collect(Collectors.joining("|"));
 
-        // \s* は半角・全角スペースを含むあらゆる空白文字にマッチします。
-        WHITESPACE_PATTERN = Pattern.compile(String.format("(\\s*)(%s)(\\s*)", typesRegex));
+        // \p{javaWhitespace}* は半角・全角スペースを含むあらゆる空白文字にマッチします。
+        WHITESPACE_PATTERN = Pattern.compile(String.format("(\\p{javaWhitespace}*)(%s)(\\p{javaWhitespace}*)", typesRegex));
     }
 
 
