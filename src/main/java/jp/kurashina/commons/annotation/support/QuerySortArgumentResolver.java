@@ -33,7 +33,10 @@ public class QuerySortArgumentResolver implements HandlerMethodArgumentResolver 
         if (values == null || values.length == 0 || (values.length == 1 && values[0].isBlank())) {
             String defaultValue = querySort.defaultValue();
             if (!defaultValue.isEmpty()) {
-                return Collections.singletonList(defaultValue);
+                return Arrays.stream(defaultValue.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .toList();
             } else {
                 return Collections.emptyList();
             }
