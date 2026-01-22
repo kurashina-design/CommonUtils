@@ -149,4 +149,19 @@ public class StringUtils {
         // \n: ラインフィード (ASCII Line Feed U+000A)
         return source.replaceAll("[\\u3000 \\t\\r\\n]", "");
     }
+
+    /**
+     * 文字列から空白を削除し、Unicode正規化(NFKC)を行います。
+     * 例: "久留米　４００　わ　１０８９" -> "久留米400わ1089"
+     *
+     * @param source 処理対象の文字列
+     * @return 空白削除・正規化後の文字列
+     */
+    public static String normalizeAndRemoveSpaces(String source) {
+        if (source == null) {
+            return null;
+        }
+        String noSpaces = removeSpaces(source);
+        return Normalizer.normalize(noSpaces, Normalizer.Form.NFKC);
+    }
 }
