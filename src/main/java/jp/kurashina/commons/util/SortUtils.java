@@ -28,9 +28,9 @@ public class SortUtils {
     public static Sort getSort(List<String> sortList, Set<String> sortableFields) {
         if (CollectionUtils.isNotEmpty(sortList)) {
             if (sortList.size() == 1) {
-                String sortKey = sortList.get(0);
+                String sortKey = sortList.getFirst();
                 if (sortableFields.contains(sortKey)) {
-                    return Sort.by(getOrderByConvertingPrefix(sortList.get(0)));
+                    return Sort.by(getOrderByConvertingPrefix(sortList.getFirst()));
                 } else {
                     log.error("\"" + sortKey + "\" not allowed sort key.");
                 }
@@ -52,9 +52,9 @@ public class SortUtils {
     public static Sort getSort(List<String> sortList, List<String> defaultSortList, Set<String> sortableFields) {
         if (CollectionUtils.isNotEmpty(sortList)) {
             if (sortList.size() == 1) {
-                String sortKey = sortList.get(0);
+                String sortKey = sortList.getFirst();
                 if (sortableFields.contains(sortKey)) {
-                    return Sort.by(getOrderByConvertingPrefix(sortList.get(0)));
+                    return Sort.by(getOrderByConvertingPrefix(sortList.getFirst()));
                 } else {
                     log.error("\"" + sortKey + "\" not allowed sort key.");
                 }
@@ -91,7 +91,7 @@ public class SortUtils {
     public static Sort getSort(List<String> sortList, List<String> defaultSortList) {
         if (CollectionUtils.isNotEmpty(sortList)) {
             if (sortList.size() == 1) {
-                return Sort.by(getOrderByConvertingPrefix(sortList.get(0)));
+                return Sort.by(getOrderByConvertingPrefix(sortList.getFirst()));
             } else {
                 List<Sort.Order> orderList = new ArrayList<>();
                 sortList.forEach(s -> {
