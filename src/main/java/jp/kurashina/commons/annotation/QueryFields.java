@@ -11,7 +11,7 @@ import java.lang.annotation.*;
  * 抽出されたフィールド名はドット記法に正規化されます。
  * </p>
  * 
- * <h3>使用例:</h3>
+ * <p><b>使用例:</b></p>
  * <ul>
  *   <li>{@code ?fields=id,name} &rarr; {@code ["id", "name"]}</li>
  *   <li>{@code ?fields=user[id,name]} &rarr; {@code ["user.id", "user.name"]}</li>

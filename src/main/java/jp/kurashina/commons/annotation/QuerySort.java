@@ -11,7 +11,7 @@ import java.lang.annotation.*;
  * 各ソートキーは、通常はフィールド名ですが、先頭にハイフン {@code -} を付けることで降順を意味します。
  * </p>
  * 
- * <h3>使用例:</h3>
+ * <p><b>使用例:</b></p>
  * <ul>
  *   <li>{@code ?sort=priority,-createdAt} &rarr; {@code ["priority", "-createdAt"]}</li>
  * </ul>
