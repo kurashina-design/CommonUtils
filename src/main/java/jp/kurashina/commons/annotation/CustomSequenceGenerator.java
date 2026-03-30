@@ -1,14 +1,9 @@
 package jp.kurashina.commons.annotation;
 
-import jakarta.annotation.Nonnull;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.generator.BeforeExecutionGenerator;
-import org.hibernate.generator.EventType;
+import org.hibernate.generator.AnnotationBasedGenerator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
 
 import java.io.Serial;
 import java.lang.reflect.Member;
@@ -18,42 +13,36 @@ import java.util.Properties;
  * カスタムシーケンスジェネレータ
  * Hibernate 6/7 の @IdGeneratorType で使用されることを想定しています。
  */
-public class CustomSequenceGenerator extends SequenceStyleGenerator implements BeforeExecutionGenerator {
+public class CustomSequenceGenerator extends SequenceStyleGenerator
+        implements AnnotationBasedGenerator<SequenceGenerated> {
 
     @Serial
     private static final long serialVersionUID = 3504831270855765030L;
+    private Properties parameters = new Properties();
 
     /**
-     * Hibernate の @IdGeneratorType によって呼び出されるコンストラクタです。
-     * Spring の Bean としてインスタンス化されないよう、引数には Spring Bean ではない型が含まれています。
+     * Hibernate 6.6 では @IdGeneratorType の設定値は initialize() で受け取る。
      */
-    public CustomSequenceGenerator(SequenceGenerated config,
-                                   Member annotatedMember,
-                                   GeneratorCreationContext context) {
-        super();
-        
+    @Override
+    public void initialize(SequenceGenerated config,
+                           Member annotatedMember,
+                           GeneratorCreationContext context) {
         Properties appliedParams = new Properties();
-        appliedParams.put(OptimizableGenerator.INITIAL_PARAM, config.startWith());
-        appliedParams.put(OptimizableGenerator.INCREMENT_PARAM, config.incrementBy());
+        appliedParams.put(OptimizableGenerator.INITIAL_PARAM, Integer.toString(config.startWith()));
+        appliedParams.put(OptimizableGenerator.INCREMENT_PARAM, Integer.toString(config.incrementBy()));
 
         String sequenceName = config.sequenceName();
         if (sequenceName == null || sequenceName.isEmpty()) {
             sequenceName = annotatedMember.getName() + "_seq";
         }
         appliedParams.put(SequenceStyleGenerator.SEQUENCE_PARAM, sequenceName);
-
-        // ServiceRegistry を使用して親クラスを初期化
-        this.configure(null, appliedParams, context.getServiceRegistry());
+        this.parameters = appliedParams;
     }
 
     @Override
-    public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) {
-        super.configure(type, params, serviceRegistry);
-    }
-
-    @Override
-    public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
-        // BeforeExecutionGenerator の実装として、既存の generate メソッドを呼び出す
-        return super.generate(session, owner);
+    @SuppressWarnings("deprecation")
+    public void create(GeneratorCreationContext context) {
+        super.create(context);
+        super.configure(context.getProperty().getType(), parameters, context.getServiceRegistry());
     }
 }
