@@ -3,6 +3,7 @@ package jp.kurashina.commons.annotation;
 import jakarta.annotation.Nonnull;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -26,9 +27,9 @@ public class CustomSequenceGenerator extends SequenceStyleGenerator implements B
      * Hibernate の @IdGeneratorType によって呼び出されるコンストラクタです。
      * Spring の Bean としてインスタンス化されないよう、引数には Spring Bean ではない型が含まれています。
      */
-    public CustomSequenceGenerator(@Nonnull SequenceGenerated config,
-                                   @Nonnull Member annotatedMember,
-                                   @Nonnull GeneratorCreationContext context) {
+    public CustomSequenceGenerator(SequenceGenerated config,
+                                   Member annotatedMember,
+                                   GeneratorCreationContext context) {
         super();
         
         Properties appliedParams = new Properties();
@@ -46,7 +47,6 @@ public class CustomSequenceGenerator extends SequenceStyleGenerator implements B
     }
 
     @Override
-    @SuppressWarnings("deprecation")
     public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) {
         super.configure(type, params, serviceRegistry);
     }
