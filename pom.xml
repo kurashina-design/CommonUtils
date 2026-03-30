@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>jp.kurashina</groupId>
     <artifactId>common-utils</artifactId>
-    <version>${revision}-20</version>
+    <version>${revision}-21</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <revision>3.5.3</revision>

@@ -137,7 +137,16 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
             return null;
         }
 
-        return normalizeBracketFields(value);
+        List<String> fields = normalizeBracketFields(value);
+        String[] excluding = annotation.excluding();
+
+        if (excluding.length > 0) {
+            return fields.stream()
+                    .filter(f -> Arrays.stream(excluding).noneMatch(e -> f.equals(e) || f.startsWith(e + ".")))
+                    .toList();
+        }
+
+        return fields;
     }
 
 }
