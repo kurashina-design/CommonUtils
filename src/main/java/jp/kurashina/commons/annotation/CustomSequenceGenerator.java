@@ -32,9 +32,10 @@ public class CustomSequenceGenerator extends SequenceStyleGenerator
         appliedParams.put(OptimizableGenerator.INCREMENT_PARAM, Integer.toString(config.incrementBy()));
 
         String sequenceName = config.sequenceName();
-        if (sequenceName == null || sequenceName.isEmpty()) {
+        if (sequenceName == null || sequenceName.isBlank()) {
             sequenceName = annotatedMember.getName() + "_id";
         }
+
         appliedParams.put(SequenceStyleGenerator.SEQUENCE_PARAM, sequenceName);
         this.parameters = appliedParams;
     }
@@ -42,7 +43,7 @@ public class CustomSequenceGenerator extends SequenceStyleGenerator
     @Override
     @SuppressWarnings("deprecation")
     public void create(GeneratorCreationContext context) {
-        super.create(context);
         super.configure(context.getProperty().getType(), parameters, context.getServiceRegistry());
+        super.create(context);
     }
 }
