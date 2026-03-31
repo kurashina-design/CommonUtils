@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>${revision}</version>
+        <version>3.5.13</version>
         <relativePath/>
     </parent>
     <dependencies>
