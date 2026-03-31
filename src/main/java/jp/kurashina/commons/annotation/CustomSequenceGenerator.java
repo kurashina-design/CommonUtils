@@ -33,7 +33,7 @@ public class CustomSequenceGenerator extends SequenceStyleGenerator
 
         String sequenceName = config.sequenceName();
         if (sequenceName == null || sequenceName.isEmpty()) {
-            sequenceName = annotatedMember.getName() + "_seq";
+            sequenceName = annotatedMember.getName() + "_id";
         }
         appliedParams.put(SequenceStyleGenerator.SEQUENCE_PARAM, sequenceName);
         this.parameters = appliedParams;
