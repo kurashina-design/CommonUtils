@@ -33,7 +33,12 @@ public class CustomSequenceGenerator extends SequenceStyleGenerator
 
         String sequenceName = config.sequenceName();
         if (sequenceName == null || sequenceName.isBlank()) {
-            sequenceName = annotatedMember.getName() + "_id";
+            // テーブル名が取得しづらいため、エンティティのクラス名を小文字にしたものをベースにするか、
+            // あるいは以前のロジックを模倣して、明示的な指定がない場合は Hibernate のデフォルトに任せず
+            // 独自の命名規則を適用します。
+            // ここではクラス名をベースに "_id" を付与します。
+            String className = annotatedMember.getDeclaringClass().getSimpleName().toLowerCase();
+            sequenceName = className + "_id";
         }
 
         appliedParams.put(SequenceStyleGenerator.SEQUENCE_PARAM, sequenceName);
@@ -43,6 +48,7 @@ public class CustomSequenceGenerator extends SequenceStyleGenerator
     @Override
     @SuppressWarnings("deprecation")
     public void create(GeneratorCreationContext context) {
+        // create 時点での context から型情報を引き継ぐ
         super.configure(context.getProperty().getType(), parameters, context.getServiceRegistry());
         super.create(context);
     }
