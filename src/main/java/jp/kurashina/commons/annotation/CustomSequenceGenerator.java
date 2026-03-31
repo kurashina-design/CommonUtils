@@ -1,55 +1,74 @@
 package jp.kurashina.commons.annotation;
 
-import org.hibernate.generator.AnnotationBasedGenerator;
-import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.id.OptimizableGenerator;
+import jakarta.annotation.Nonnull;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.io.Serial;
+import java.lang.reflect.Field;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.util.Properties;
 
-/**
- * カスタムシーケンスジェネレータ
- * Hibernate 6/7 の @IdGeneratorType で使用されることを想定しています。
- */
-public class CustomSequenceGenerator extends SequenceStyleGenerator
-        implements AnnotationBasedGenerator<SequenceGenerated> {
+public class CustomSequenceGenerator extends SequenceStyleGenerator {
 
     @Serial
-    private static final long serialVersionUID = -5417410472072468910L;
-    private Properties parameters = new Properties();
+    private static final long serialVersionUID = -2816226363971645679L;
 
-    /**
-     * Hibernate 6.6 では @IdGeneratorType の設定値は initialize() で受け取る。
-     */
-    @Override
-    public void initialize(SequenceGenerated config,
-                           Member annotatedMember,
-                           GeneratorCreationContext context) {
-        Properties appliedParams = new Properties();
-        appliedParams.put(OptimizableGenerator.INITIAL_PARAM, Integer.toString(config.startWith()));
-        appliedParams.put(OptimizableGenerator.INCREMENT_PARAM, Integer.toString(config.incrementBy()));
+    public CustomSequenceGenerator(@Nonnull SequenceGenerated config,
+                                   @Nonnull Member annotatedMember,
+                                   @Nonnull CustomIdGeneratorCreationContext context) {
 
+        ServiceRegistry serviceRegistry = context.getServiceRegistry();
+
+        // 1. 型の解決 (Hibernate 6.6での標準的な取得)
+        TypeConfiguration typeConfiguration = new TypeConfiguration();
+        Class<?> memberType = getMemberType(annotatedMember);
+        Type hibernateType = typeConfiguration.getBasicTypeRegistry().getRegisteredType(memberType);
+
+        // 2. パラメータの構築
+        Properties params = new Properties();
+
+        // 数値設定
+        params.put(INITIAL_PARAM, String.valueOf(config.startWith()));
+        params.put(INCREMENT_PARAM, String.valueOf(config.incrementBy()));
+
+        // 3. シークエンス名の決定ロジック
         String sequenceName = config.sequenceName();
-        if (sequenceName == null || sequenceName.isBlank()) {
-            // テーブル名が取得しづらいため、エンティティのクラス名を小文字にしたものをベースにするか、
-            // あるいは以前のロジックを模倣して、明示的な指定がない場合は Hibernate のデフォルトに任せず
-            // 独自の命名規則を適用します。
-            // ここではクラス名をベースに "_id" を付与します。
-            String className = annotatedMember.getDeclaringClass().getSimpleName().toLowerCase();
-            sequenceName = className + "_id";
+        if (sequenceName == null || sequenceName.isEmpty()) {
+            // クラス名から user_id のような名前を作る
+            String entityName = annotatedMember.getDeclaringClass().getSimpleName();
+            sequenceName = entityName.toLowerCase() + "_id";
         }
 
-        appliedParams.put(SequenceStyleGenerator.SEQUENCE_PARAM, sequenceName);
-        this.parameters = appliedParams;
+        // 4. Hibernate 6.x で命名戦略を上書きするための設定
+        // "sequence_name" キーを直接指定します（SEQUENCE_PARAM の実体）
+        params.put(SEQUENCE_PARAM, sequenceName);
+
+        // 5. 親クラスの初期化
+        // これにより内部の DatabaseStructure が構築されます
+        super.configure(hibernateType, params, serviceRegistry);
+    }
+
+    private Class<?> getMemberType(Member member) {
+        if (member instanceof Field f) {
+            return f.getType();
+        } else if (member instanceof Method m) {
+            return m.getReturnType();
+        }
+        throw new IllegalArgumentException("Unsupported member type: " + member.getClass());
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public void create(GeneratorCreationContext context) {
-        // create 時点での context から型情報を引き継ぐ
-        super.configure(context.getProperty().getType(), parameters, context.getServiceRegistry());
-        super.create(context);
+    public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) {
+        // コンストラクタで super.configure を実行済みなので、
+        // Hibernate本体からの後続の呼び出しで設定がデフォルト(テーブル名_seq)に
+        // 戻されないよう、すでに初期化済みの場合は何もしないようにします。
+        if (getDatabaseStructure() == null) {
+            super.configure(type, params, serviceRegistry);
+        }
     }
 }
