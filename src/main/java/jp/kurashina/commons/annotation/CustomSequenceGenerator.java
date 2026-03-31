@@ -17,7 +17,7 @@ public class CustomSequenceGenerator extends SequenceStyleGenerator
         implements AnnotationBasedGenerator<SequenceGenerated> {
 
     @Serial
-    private static final long serialVersionUID = 3504831270855765030L;
+    private static final long serialVersionUID = -5417410472072468910L;
     private Properties parameters = new Properties();
 
     /**
