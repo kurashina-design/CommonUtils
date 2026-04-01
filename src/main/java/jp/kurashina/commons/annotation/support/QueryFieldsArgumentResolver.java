@@ -13,6 +13,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * {@link QueryFields} アノテーションが付与されたコントローラーの引数を解析し、
+ * 正規化およびフィルタリングされたフィールドリストを生成するリゾルバー。
+ * * <p>
+ * 以下の順序で処理を行います：
+ * <ol>
+ * <li>リクエストパラメータから文字列を取得（未指定時はデフォルト値）</li>
+ * <li>ブラケット記法（{@code a[b,c]}）をドット記法（{@code a.b, a.c}）に展開</li>
+ * <li>{@code maxDepth} による深度（ドット数）制限の適用</li>
+ * <li>{@code excluding} による特定パスの除外（ワイルドカード対応）</li>
+ * </ol>
+ * </p>
+ */
 public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolver {
 
     @Override
@@ -54,10 +67,10 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
             return null;
         }
 
-        // 1. ブラケット記法を正規化
+        // 1. 正規化
         List<String> fields = normalizeBracketFields(value);
 
-        // 2. 深度制限 (maxDepth) の適用
+        // 2. 深度制限
         int maxDepth = annotation.maxDepth();
         if (maxDepth < 99) {
             fields = fields.stream()
@@ -65,18 +78,13 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
                     .collect(Collectors.toList());
         }
 
-        // 3. 除外設定 (excluding) の適用（ワイルドカード対応版）
+        // 3. 除外設定
         String[] excluding = annotation.excluding();
         if (excluding.length > 0) {
             fields = fields.stream()
                     .filter(f -> Arrays.stream(excluding).noneMatch(e -> {
-                        // "children.assets.*" のような指定から "children.assets" を抽出
                         boolean isWildcard = e.endsWith(".*");
                         String base = isWildcard ? e.substring(0, e.length() - 2) : e;
-
-                        // 判定条件：
-                        // a. フィールド名が base と完全一致する場合
-                        // b. フィールド名が base. で始まる場合（配下すべて）
                         return f.equals(base) || f.startsWith(base + ".");
                     }))
                     .collect(Collectors.toList());
@@ -85,13 +93,23 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
         return fields;
     }
 
+    /**
+     * フィールド名に含まれるドット（.）の数をカウントします。
+     * @param field フィールド名
+     * @return ドットの数
+     */
     private long countDots(String field) {
         if (field == null) return 0;
         return field.chars().filter(ch -> ch == '.').count();
     }
 
-    // --- 以下、既存のロジックを維持 ---
-
+    /**
+     * ブラケット記法を含む文字列を、フラットなドット記法のリストに正規化します。
+     * <p>入力例: {@code id,user[id,profile[image]]}</p>
+     * <p>出力例: {@code ["id", "user.id", "user.profile.image"]}</p>
+     * * @param source リクエストされたフィールド指定文字列
+     * @return 正規化され、ソートされたフィールドリスト
+     */
     public List<String> normalizeBracketFields(String source) {
         source = source.replaceAll("\\s+", "");
         String normalizedSource = replaceCommasWithinBrackets(source);
@@ -106,6 +124,9 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
         return fieldSet.stream().sorted().collect(Collectors.toList());
     }
 
+    /**
+     * ブラケット内のカンマを一時的に特殊文字に置換します。
+     */
     private String replaceCommasWithinBrackets(String source) {
         StringBuilder builder = new StringBuilder();
         int depth = 0;
@@ -126,6 +147,9 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
         }
     }
 
+    /**
+     * 再帰的にネストされたブラケット構造を解析し、フィールドパスを構築します。
+     */
     private void processNestedField(String field, String prefix, Set<String> fieldList) {
         Pattern pattern = Pattern.compile("^([^\\s\\[\\]]+)\\[(.+)\\]$");
         Matcher matcher = pattern.matcher(field);
