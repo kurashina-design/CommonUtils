@@ -13,10 +13,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/**
- * {@link QueryFields} アノテーションが付与されたメソッド引数を解決するリゾルバー。
- * ブラケット記法をドット記法に正規化し、深度制限および除外設定を適用します。
- */
 public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolver {
 
     @Override
@@ -58,11 +54,10 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
             return null;
         }
 
-        // 1. ブラケット記法を正規化してドット記法のリストに変換
+        // 1. ブラケット記法を正規化
         List<String> fields = normalizeBracketFields(value);
 
         // 2. 深度制限 (maxDepth) の適用
-        // ドットの数を数えて、許可された階層を超えるフィールドを除去する
         int maxDepth = annotation.maxDepth();
         if (maxDepth < 99) {
             fields = fields.stream()
@@ -70,33 +65,35 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
                     .collect(Collectors.toList());
         }
 
-        // 3. 除外設定 (excluding) の適用
+        // 3. 除外設定 (excluding) の適用（ワイルドカード対応版）
         String[] excluding = annotation.excluding();
         if (excluding.length > 0) {
             fields = fields.stream()
-                    .filter(f -> Arrays.stream(excluding).noneMatch(e -> f.equals(e) || f.startsWith(e + ".")))
+                    .filter(f -> Arrays.stream(excluding).noneMatch(e -> {
+                        // "children.assets.*" のような指定から "children.assets" を抽出
+                        boolean isWildcard = e.endsWith(".*");
+                        String base = isWildcard ? e.substring(0, e.length() - 2) : e;
+
+                        // 判定条件：
+                        // a. フィールド名が base と完全一致する場合
+                        // b. フィールド名が base. で始まる場合（配下すべて）
+                        return f.equals(base) || f.startsWith(base + ".");
+                    }))
                     .collect(Collectors.toList());
         }
 
         return fields;
     }
 
-    /**
-     * 文字列内のドットの数をカウントします。
-     */
     private long countDots(String field) {
         if (field == null) return 0;
         return field.chars().filter(ch -> ch == '.').count();
     }
 
-    /**
-     * ブラケット記法の文字列をドット記法のリストに正規化します。
-     */
-    public List<String> normalizeBracketFields(String source) {
-        // 前処理: 空白を削除
-        source = source.replaceAll("\\s+", "");
+    // --- 以下、既存のロジックを維持 ---
 
-        // ブラケット内のカンマを一時的に置換して分割
+    public List<String> normalizeBracketFields(String source) {
+        source = source.replaceAll("\\s+", "");
         String normalizedSource = replaceCommasWithinBrackets(source);
         List<String> splittedFields = Arrays.stream(normalizedSource.split(","))
                 .map(s -> s.replace("𐐷", ","))
@@ -106,27 +103,17 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
         for (String field : splittedFields) {
             processField(field, fieldSet);
         }
-
-        // 結果をソートして返す（決定論的なレスポンスのため）
         return fieldSet.stream().sorted().collect(Collectors.toList());
     }
 
     private String replaceCommasWithinBrackets(String source) {
         StringBuilder builder = new StringBuilder();
-        boolean insideBrackets = false;
         int depth = 0;
-
         for (char c : source.toCharArray()) {
             if (c == '[') depth++;
             else if (c == ']') depth--;
-
-            insideBrackets = (depth > 0);
-
-            if (c == ',' && insideBrackets) {
-                builder.append("𐐷");
-            } else {
-                builder.append(c);
-            }
+            if (c == ',' && depth > 0) builder.append("𐐷");
+            else builder.append(c);
         }
         return builder.toString();
     }
@@ -142,19 +129,11 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
     private void processNestedField(String field, String prefix, Set<String> fieldList) {
         Pattern pattern = Pattern.compile("^([^\\s\\[\\]]+)\\[(.+)\\]$");
         Matcher matcher = pattern.matcher(field);
-
         if (matcher.find()) {
             String root = matcher.group(1);
             String subFieldsRaw = matcher.group(2);
-
             String currentPrefix = prefix.isEmpty() ? root : prefix + "." + root;
-
-            // ネストのルート自体もフィールドとして追加（必要に応じて）
-            // fieldList.add(currentPrefix);
-
-            String normalizedSubFields = replaceCommasWithinBrackets(subFieldsRaw);
-            String[] subFields = normalizedSubFields.split(",");
-
+            String[] subFields = replaceCommasWithinBrackets(subFieldsRaw).split(",");
             for (String subField : subFields) {
                 String cleanSubField = subField.replace("𐐷", ",");
                 if (cleanSubField.contains("[")) {
