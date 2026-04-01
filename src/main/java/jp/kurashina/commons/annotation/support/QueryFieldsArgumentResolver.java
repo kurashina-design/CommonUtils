@@ -11,92 +11,13 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+/**
+ * {@link QueryFields} アノテーションが付与されたメソッド引数を解決するリゾルバー。
+ * ブラケット記法をドット記法に正規化し、深度制限および除外設定を適用します。
+ */
 public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolver {
-
-    public List<String> normalizeBracketFields(String source) {
-        // 前処理: 空白を削除
-        source = source.replaceAll("\\s+", "");
-
-        // カスタム区切り文字を使ってフィールドを分割
-        String normalizedSource = replaceCommasWithinBrackets(source);
-        List<String> splittedFields = Arrays.stream(normalizedSource.split(","))
-                .map(s -> s.replace("𐐷", ","))
-                .toList();
-
-        // フィールドを解析してセットに追加
-        Set<String> fieldList = new HashSet<>();
-        for (String field : splittedFields) {
-            processField(field, fieldList);
-        }
-
-        // 結果をソートして返す
-        return fieldList.stream().toList();
-    }
-
-    private String replaceCommasWithinBrackets(String source) {
-        StringBuilder builder = new StringBuilder();
-        boolean insideBrackets = false;
-
-        for (char c : source.toCharArray()) {
-            if (c == '[') {
-                insideBrackets = true;
-            } else if (c == ']') {
-                insideBrackets = false;
-            }
-
-            if (insideBrackets && c == ',') {
-                builder.append("𐐷"); // カスタム区切り文字に置き換え
-            } else {
-                builder.append(c);
-            }
-        }
-
-        return builder.toString();
-    }
-
-    private void processField(String field, Set<String> fieldList) {
-        if (!field.contains("[") && !field.contains("]")) {
-            // 単純なフィールドの場合
-            fieldList.add(field);
-        } else {
-            // パターンマッチングでフィールドを解析
-            if (!processNestedField(field, fieldList)) {
-                processSimpleField(field, fieldList);
-            }
-        }
-    }
-
-    private boolean processNestedField(String field, Set<String> fieldList) {
-        Pattern nestedPattern = Pattern.compile("(.*)\\[(.*)\\]\\[(.*)\\]");
-        Matcher matcher = nestedPattern.matcher(field);
-
-        if (matcher.find()) {
-            String root = matcher.group(1);
-            String child = matcher.group(2);
-            String[] childFields = matcher.group(3).split(",");
-
-            for (String childField : childFields) {
-                fieldList.add(root + "." + child + "." + childField);
-            }
-            return true;
-        }
-        return false;
-    }
-
-    private void processSimpleField(String field, Set<String> fieldList) {
-        Pattern simplePattern = Pattern.compile("(.*)\\[(.*)\\]");
-        Matcher matcher = simplePattern.matcher(field);
-
-        if (matcher.matches()) {
-            String root = matcher.group(1);
-            String[] fields = matcher.group(2).split(",");
-
-            for (String subField : fields) {
-                fieldList.add(root + "." + subField);
-            }
-        }
-    }
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -137,16 +58,113 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
             return null;
         }
 
+        // 1. ブラケット記法を正規化してドット記法のリストに変換
         List<String> fields = normalizeBracketFields(value);
-        String[] excluding = annotation.excluding();
 
+        // 2. 深度制限 (maxDepth) の適用
+        // ドットの数を数えて、許可された階層を超えるフィールドを除去する
+        int maxDepth = annotation.maxDepth();
+        if (maxDepth < 99) {
+            fields = fields.stream()
+                    .filter(f -> countDots(f) <= maxDepth)
+                    .collect(Collectors.toList());
+        }
+
+        // 3. 除外設定 (excluding) の適用
+        String[] excluding = annotation.excluding();
         if (excluding.length > 0) {
-            return fields.stream()
+            fields = fields.stream()
                     .filter(f -> Arrays.stream(excluding).noneMatch(e -> f.equals(e) || f.startsWith(e + ".")))
-                    .toList();
+                    .collect(Collectors.toList());
         }
 
         return fields;
     }
 
+    /**
+     * 文字列内のドットの数をカウントします。
+     */
+    private long countDots(String field) {
+        if (field == null) return 0;
+        return field.chars().filter(ch -> ch == '.').count();
+    }
+
+    /**
+     * ブラケット記法の文字列をドット記法のリストに正規化します。
+     */
+    public List<String> normalizeBracketFields(String source) {
+        // 前処理: 空白を削除
+        source = source.replaceAll("\\s+", "");
+
+        // ブラケット内のカンマを一時的に置換して分割
+        String normalizedSource = replaceCommasWithinBrackets(source);
+        List<String> splittedFields = Arrays.stream(normalizedSource.split(","))
+                .map(s -> s.replace("𐐷", ","))
+                .toList();
+
+        Set<String> fieldSet = new HashSet<>();
+        for (String field : splittedFields) {
+            processField(field, fieldSet);
+        }
+
+        // 結果をソートして返す（決定論的なレスポンスのため）
+        return fieldSet.stream().sorted().collect(Collectors.toList());
+    }
+
+    private String replaceCommasWithinBrackets(String source) {
+        StringBuilder builder = new StringBuilder();
+        boolean insideBrackets = false;
+        int depth = 0;
+
+        for (char c : source.toCharArray()) {
+            if (c == '[') depth++;
+            else if (c == ']') depth--;
+
+            insideBrackets = (depth > 0);
+
+            if (c == ',' && insideBrackets) {
+                builder.append("𐐷");
+            } else {
+                builder.append(c);
+            }
+        }
+        return builder.toString();
+    }
+
+    private void processField(String field, Set<String> fieldList) {
+        if (field.contains("[")) {
+            processNestedField(field, "", fieldList);
+        } else {
+            fieldList.add(field);
+        }
+    }
+
+    private void processNestedField(String field, String prefix, Set<String> fieldList) {
+        Pattern pattern = Pattern.compile("^([^\\s\\[\\]]+)\\[(.+)\\]$");
+        Matcher matcher = pattern.matcher(field);
+
+        if (matcher.find()) {
+            String root = matcher.group(1);
+            String subFieldsRaw = matcher.group(2);
+
+            String currentPrefix = prefix.isEmpty() ? root : prefix + "." + root;
+
+            // ネストのルート自体もフィールドとして追加（必要に応じて）
+            // fieldList.add(currentPrefix);
+
+            String normalizedSubFields = replaceCommasWithinBrackets(subFieldsRaw);
+            String[] subFields = normalizedSubFields.split(",");
+
+            for (String subField : subFields) {
+                String cleanSubField = subField.replace("𐐷", ",");
+                if (cleanSubField.contains("[")) {
+                    processNestedField(cleanSubField, currentPrefix, fieldList);
+                } else {
+                    fieldList.add(currentPrefix + "." + cleanSubField);
+                }
+            }
+        } else {
+            fieldList.add(prefix.isEmpty() ? field : prefix + "." + field);
+        }
+    }
 }
