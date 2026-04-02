@@ -73,11 +73,12 @@ public class BeanUtils {
             ignores.addAll(ignoreProperties);
         }
 
-        Field[] fields = source.getClass().getDeclaredFields();
-        for (Field field : fields) {
-            String fieldName = field.getName();
-            if (!specificProperties.contains(fieldName)) {
-                ignores.add(fieldName);
+        final org.springframework.beans.BeanWrapper src = new org.springframework.beans.BeanWrapperImpl(source);
+        java.beans.PropertyDescriptor[] pds = src.getPropertyDescriptors();
+        for (java.beans.PropertyDescriptor pd : pds) {
+            String propertyName = pd.getName();
+            if (specificProperties == null || !specificProperties.contains(propertyName)) {
+                ignores.add(propertyName);
             }
         }
         org.springframework.beans.BeanUtils.copyProperties(source, target, ignores.toArray(new String[0]));
