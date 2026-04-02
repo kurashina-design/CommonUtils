@@ -16,15 +16,15 @@ import java.util.stream.Collectors;
 /**
  * {@link QueryFields} アノテーションが付与されたコントローラーの引数を解析し、
  * 正規化およびフィルタリングされたフィールドリストを生成するリゾルバー。
- * * <p>
+ * <p>
  * 以下の順序で処理を行います：
+ * </p>
  * <ol>
  * <li>リクエストパラメータから文字列を取得（未指定時はデフォルト値）</li>
  * <li>ブラケット記法（{@code a[b,c]}）をドット記法（{@code a.b, a.c}）に展開</li>
  * <li>{@code maxDepth} による深度（ドット数）制限の適用</li>
  * <li>{@code excluding} による特定パスの除外（ワイルドカード対応）</li>
  * </ol>
- * </p>
  */
 public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolver {
 
@@ -95,6 +95,7 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
 
     /**
      * フィールド名に含まれるドット（.）の数をカウントします。
+     *
      * @param field フィールド名
      * @return ドットの数
      */
@@ -107,7 +108,8 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
      * ブラケット記法を含む文字列を、フラットなドット記法のリストに正規化します。
      * <p>入力例: {@code id,user[id,profile[image]]}</p>
      * <p>出力例: {@code ["id", "user.id", "user.profile.image"]}</p>
-     * * @param source リクエストされたフィールド指定文字列
+     *
+     * @param source リクエストされたフィールド指定文字列
      * @return 正規化され、ソートされたフィールドリスト
      */
     public List<String> normalizeBracketFields(String source) {
@@ -126,6 +128,9 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
 
     /**
      * ブラケット内のカンマを一時的に特殊文字に置換します。
+     *
+     * @param source 変換対象の文字列
+     * @return 変換後の文字列
      */
     private String replaceCommasWithinBrackets(String source) {
         StringBuilder builder = new StringBuilder();
@@ -139,6 +144,12 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
         return builder.toString();
     }
 
+    /**
+     * 単一またはネストされたフィールドを解析してフィールドリストに追加します。
+     *
+     * @param field 処理対象のフィールド文字列
+     * @param fieldList 結果を格納するセット
+     */
     private void processField(String field, Set<String> fieldList) {
         if (field.contains("[")) {
             processNestedField(field, "", fieldList);
@@ -149,6 +160,10 @@ public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolve
 
     /**
      * 再帰的にネストされたブラケット構造を解析し、フィールドパスを構築します。
+     *
+     * @param field 処理対象のフィールド文字列
+     * @param prefix 現在のプレフィックスパス
+     * @param fieldList 結果を格納するセット
      */
     private void processNestedField(String field, String prefix, Set<String> fieldList) {
         Pattern pattern = Pattern.compile("^([^\\s\\[\\]]+)\\[(.+)\\]$");
