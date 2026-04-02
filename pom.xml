@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>jp.kurashina</groupId>
     <artifactId>common-utils</artifactId>
-    <version>${revision}-12</version>
+    <version>${revision}-13</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <revision>3.5.13</revision>
@@ -107,6 +107,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <release>${maven.compiler.release}</release>
+                    <additionalOptions>
+                        <additionalOption>-Xdoclint:none</additionalOption>
+                    </additionalOptions>
+                </configuration>
                 <executions>
                     <execution>
                         <phase>package</phase>
