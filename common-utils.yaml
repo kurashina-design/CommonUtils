@@ -1,0 +1,17 @@
+components:
+  schemas:
+    PingResponse:
+      type: object
+      x-java-fqcn: jp.kurashina.commons.resource.PingResponse
+      properties:
+        status:
+          type: string
+          example: ok
+
+    CountResponse:
+      type: object
+      x-java-fqcn: jp.kurashina.commons.resource.CountResponse
+      properties:
+        count:
+          type: integer
+          format: int64
