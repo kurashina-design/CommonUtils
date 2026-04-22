@@ -16,7 +16,7 @@ import java.util.Properties;
 public class CustomSequenceGenerator extends SequenceStyleGenerator {
 
     @Serial
-    private static final long serialVersionUID = -2816226363971645679L;
+    private static final long serialVersionUID = -2045947366157883421L;
 
     public CustomSequenceGenerator(@Nonnull SequenceGenerated config,
                                    @Nonnull Member annotatedMember,
@@ -39,17 +39,14 @@ public class CustomSequenceGenerator extends SequenceStyleGenerator {
         // 3. シークエンス名の決定ロジック
         String sequenceName = config.sequenceName();
         if (sequenceName == null || sequenceName.isEmpty()) {
-            // クラス名から user_id のような名前を作る
             String entityName = annotatedMember.getDeclaringClass().getSimpleName();
-            sequenceName = entityName.toLowerCase() + "_id";
+            sequenceName = toSnakeCase(entityName) + "_id";
         }
 
         // 4. Hibernate 6.x で命名戦略を上書きするための設定
-        // "sequence_name" キーを直接指定します（SEQUENCE_PARAM の実体）
         params.put(SEQUENCE_PARAM, sequenceName);
 
         // 5. 親クラスの初期化
-        // これにより内部の DatabaseStructure が構築されます
         super.configure(hibernateType, params, serviceRegistry);
     }
 
@@ -60,6 +57,13 @@ public class CustomSequenceGenerator extends SequenceStyleGenerator {
             return m.getReturnType();
         }
         throw new IllegalArgumentException("Unsupported member type: " + member.getClass());
+    }
+
+    private String toSnakeCase(String value) {
+        return value
+                .replaceAll("([a-z0-9])([A-Z])", "$1_$2")
+                .replaceAll("([A-Z]+)([A-Z][a-z])", "$1_$2")
+                .toLowerCase();
     }
 
     @Override
