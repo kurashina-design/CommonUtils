@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class QuerySortArgumentResolver implements HandlerMethodArgumentResolver {
 
@@ -32,8 +33,18 @@ public class QuerySortArgumentResolver implements HandlerMethodArgumentResolver 
         String paramName = Objects.requireNonNull(querySort).name();
         String[] values = webRequest.getParameterValues(paramName);
 
-        // パラメータが存在しない、または空の場合
-        if (values == null || values.length == 0 || (values.length == 1 && values[0].isBlank())) {
+        // リクエストの値も、デフォルト値と同様にカンマ区切りで複数指定できる（例: sort=id,-createdDate）。
+        // sort=id&sort=-createdDate のようにパラメータを繰り返す形式も、従来どおり使える。両者は混在してもよい。
+        List<String> sortKeys = (values == null)
+                ? Collections.emptyList()
+                : Arrays.stream(values)
+                        .flatMap(value -> Arrays.stream(value.split(",")))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .collect(Collectors.toList());
+
+        // パラメータが存在しない、または分割後に有効なキーがない場合
+        if (sortKeys.isEmpty()) {
             String defaultValue = querySort.defaultValue();
             
             // デフォルト値がある場合はそれを使用
@@ -54,6 +65,6 @@ public class QuerySortArgumentResolver implements HandlerMethodArgumentResolver 
             return Collections.emptyList();
         }
 
-        return Arrays.asList(values);
+        return sortKeys;
     }
 }

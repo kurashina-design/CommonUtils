@@ -9,11 +9,14 @@ import java.lang.annotation.*;
  * <p>
  * {@code List<String>} 型の引数に使用し、リクエストパラメータからソートキーのリストを取得します。
  * 各ソートキーは、通常はフィールド名ですが、先頭にハイフン {@code -} を付けることで降順を意味します。
+ * 複数のソートキーは、カンマ区切りまたは同じパラメータの繰り返しで指定でき、両形式を混在させることもできます。
+ * 分割・トリム後に有効なキーが1つも無い場合（例: {@code sort=,}）は、パラメータが指定されなかった場合と同様に、デフォルト値・必須チェックが適用されます。
  * </p>
  * 
  * <p><b>使用例:</b></p>
  * <ul>
  *   <li>{@code ?sort=priority,-createdAt} &rarr; {@code ["priority", "-createdAt"]}</li>
+ *   <li>{@code ?sort=priority&sort=-createdAt} &rarr; {@code ["priority", "-createdAt"]}</li>
  * </ul>
  * 
  * <p>抽出されたリストは {@link jp.kurashina.commons.util.SortUtils} などのユーティリティを使用して

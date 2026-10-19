@@ -6,6 +6,30 @@ mvn versions:display-dependency-updates
 mvn deploy
 '''
 
+## `@QuerySort`
+
+複数のソート条件は、カンマ区切りまたは同じパラメータの繰り返しで指定できます。両形式の混在も可能です。先頭に `-` を付けた項目は降順になります。
+分割・トリム後に有効なキーが1つも無い場合（例: `sort=,`）は、パラメータが指定されなかった場合と同様に、デフォルト値・必須チェックが適用されます。
+
+```text
+sort=id,-createdDate
+sort=id&sort=-createdDate
+sort=a,b&sort=-c
+```
+
+ソート項目の許可リストは利用側がエンドポイントごとに決め、コントローラーで検証します。
+
+```java
+@GetMapping("/page")
+public Pagination<AssetResponse> page(..., @QuerySort(defaultValue = "id") List<String> sortList) {
+    SortUtils.validateSortKeys(sortList, Set.of("id", "createdDate", "displayName"));
+    Pageable pageable = paginationHelper.getPageable(perPage, page, sortList);
+    ...
+}
+```
+
+ページングなしの一覧でも、同じ `validateSortKeys` をコントローラーで呼ぶことでソート項目を検証できます。
+
 ## common-utils.yaml作成依頼プロンプト
 
 あなたはJava/Springのライブラリ仕様書作成アシスタントです。

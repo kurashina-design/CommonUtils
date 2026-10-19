@@ -148,6 +148,16 @@ public class PaginationHelper<E,R> {
         }
     }
 
+    public Pageable getPageable(
+            Integer perPage,
+            Integer page,
+            List<String> sortList,
+            Set<String> sortableFields
+    ) {
+        SortUtils.validateSortKeys(sortList, sortableFields);
+        return getPageable(perPage, page, sortList);
+    }
+
     public Pageable replaceSort(Pageable pageable, Sort newSort) {
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), newSort);
     }

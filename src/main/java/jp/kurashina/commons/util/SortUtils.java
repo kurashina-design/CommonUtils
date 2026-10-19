@@ -1,5 +1,6 @@
 package jp.kurashina.commons.util;
 
+import jp.kurashina.commons.exception.BadRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.regex.Pattern;
 
 /**
  * ソート関連のユーティリティクラス。
@@ -17,6 +19,11 @@ import java.util.StringJoiner;
 @Component
 @Slf4j
 public class SortUtils {
+
+    private static final Pattern SORT_KEY_PATTERN = Pattern.compile(
+            "^-?[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$");
+    private static final String INVALID_SORT_FORMAT_MESSAGE =
+            "Invalid sort format. Use fieldName or -fieldName.";
 
     /**
      * Sortオブジェクトがnullまたは空であるかをチェックします。
@@ -39,6 +46,45 @@ public class SortUtils {
      */
     public static boolean isNotEmpty(Sort sort) {
         return !isEmpty(sort);
+    }
+
+    /**
+     * ソートキーの書式と、呼び出し側が指定した許可リストとの完全一致を検証します。
+     * 書式は {@code fieldName}、{@code -fieldName}、またはドット区切りのパスを許可し、
+     * 書式が不正な場合は入力値を含まない
+     * {@code "Invalid sort format. Use fieldName or -fieldName."} というメッセージで
+     * {@link BadRequestException} をスローします。
+     * 許可リストに存在しない場合は、先頭の {@code -} を除いた項目名を使った
+     * {@code "Unknown sort field: 項目名"} というメッセージで {@link BadRequestException} をスローします。
+     * 比較では大文字小文字を区別し、ドット区切りのパスも分解せずそのまま比較します。
+     * <p>
+     * 既存の {@link #getSort(List, Set)} は許可されていない項目を除外しますが、
+     * このメソッドは不正な項目を {@link BadRequestException} にします。
+     * </p>
+     *
+     * @param sortList 検証するソートキーのリスト。{@code null} または空の場合は検証しません
+     * @param sortableFields 許可する項目名の集合。空の場合はすべて拒否します
+     * @throws IllegalArgumentException {@code sortableFields} が {@code null} の場合
+     * @throws BadRequestException ソートキーの書式が不正、または許可リストに存在しない場合
+     */
+    public static void validateSortKeys(List<String> sortList, Set<String> sortableFields) {
+        if (sortableFields == null) {
+            throw new IllegalArgumentException("sortableFields must not be null");
+        }
+        if (CollectionUtils.isEmpty(sortList)) {
+            return;
+        }
+
+        for (String sortKey : sortList) {
+            if (sortKey == null || !SORT_KEY_PATTERN.matcher(sortKey).matches()) {
+                throw new BadRequestException(INVALID_SORT_FORMAT_MESSAGE);
+            }
+
+            String fieldName = StringUtils.removeStart(sortKey, "-");
+            if (!sortableFields.contains(fieldName)) {
+                throw new BadRequestException("Unknown sort field: " + fieldName);
+            }
+        }
     }
 
     /**
