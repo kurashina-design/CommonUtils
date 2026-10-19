@@ -17,18 +17,32 @@ sort=id&sort=-createdDate
 sort=a,b&sort=-c
 ```
 
-ソート項目の許可リストは利用側がエンドポイントごとに決め、コントローラーで検証します。
+`SortableFields` はJPAメタモデルからエンティティごとの許可リストを作成します。利用するには、アプリケーション側でBean登録が必要です。
+
+```java
+@Bean
+public SortableFields sortableFields(EntityManagerFactory entityManagerFactory) {
+    return new SortableFields(entityManagerFactory);
+}
+```
+
+ページングでは、検証付きの `PaginationHelper#getPageable` を利用できます。
 
 ```java
 @GetMapping("/page")
 public Pagination<AssetResponse> page(..., @QuerySort(defaultValue = "id") List<String> sortList) {
-    SortUtils.validateSortKeys(sortList, Set.of("id", "createdDate", "displayName"));
-    Pageable pageable = paginationHelper.getPageable(perPage, page, sortList);
+    Pageable pageable = paginationHelper.getPageable(perPage, page, sortList, sortableFields.of(Asset.class));
     ...
 }
 ```
 
-ページングなしの一覧でも、同じ `validateSortKeys` をコントローラーで呼ぶことでソート項目を検証できます。
+ページングなしの一覧では、コントローラーで明示的に検証します。
+
+```java
+SortUtils.validateSortKeys(sortList, sortableFields.of(Directory.class));
+```
+
+許可リストは継承属性と単一値の関連・埋め込みの1階層先を含み、コレクション属性と2階層以上のパスを含みません。
 
 ## common-utils.yaml作成依頼プロンプト
 
