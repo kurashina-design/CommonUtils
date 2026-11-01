@@ -10,9 +10,10 @@ JPA/Hibernate 補助、文字列・日時などの汎用処理、業務例外の
 
 - groupId: `jp.kurashina`
 - artifactId: `common-utils`
-- version: `${revision}-17`（現在の `revision` は `3.5.13`）
+- version: `${revision}`（現在の `revision` は `4.0.9`）
 - Java: 21
-- Spring Boot: 3.5.13
+- Spring Boot: 4.0.9
+- JSON: Jackson 3（アノテーションは互換パッケージの `com.fasterxml.jackson.annotation`）
 - 配布先: GitHub Packages (`kurashina-design/CommonUtils`)
 
 ## ディレクトリと成果物
@@ -54,7 +55,8 @@ Spring MVC と Hibernate の拡張点です。
 - `@QuerySort`: `sort=priority,-createdAt` をソートキー一覧として受け取る
 - `QuerySortArgumentResolver`: カンマ区切り・複数パラメータ・必須/default を処理
 - `@ValidPerPage` / `PerPageValidator`: 1ページ当たり件数の範囲検証
-- `@SequenceGenerated` / `CustomSequenceGenerator`: Hibernate の sequence ID 生成を設定
+- シークエンスID生成には Jakarta Persistence 標準の `@GeneratedValue` と
+  `@SequenceGenerator` を使用する（詳細は `spring-boot-4-migration.md`）
 
 引数リゾルバーはクラスを置くだけでは有効になりません。利用側アプリケーションで
 `WebMvcConfigurer#addArgumentResolvers` などを使って登録する必要があります。
