@@ -10,9 +10,9 @@ JPA/Hibernate 補助、文字列・日時などの汎用処理、業務例外の
 
 - groupId: `jp.kurashina`
 - artifactId: `common-utils`
-- version: `${revision}-17`（現在の `revision` は `3.5.13`）
+- version: `${revision}-1`（現在の `revision` は `4.1.2`）
 - Java: 21
-- Spring Boot: 3.5.13
+- Spring Boot: 4.1.2
 - 配布先: GitHub Packages (`kurashina-design/CommonUtils`)
 
 ## ディレクトリと成果物
@@ -26,7 +26,8 @@ JPA/Hibernate 補助、文字列・日時などの汎用処理、業務例外の
 | `pom.xml` | Java/Spring の依存関係、source/javadoc jar、配布設定 |
 | `target/` | Maven の生成物（編集対象ではない） |
 
-現状、`src/test` はありません。`README.md` も実質的に未整備です。
+`src/test` には、引数リゾルバー、ページング、ソート、JPAメタモデル、APIエラー、
+Jackson 3、Servlet Filterの回帰テストがあります。
 
 ## パッケージ別の責務
 
@@ -54,7 +55,9 @@ Spring MVC と Hibernate の拡張点です。
 - `@QuerySort`: `sort=priority,-createdAt` をソートキー一覧として受け取る
 - `QuerySortArgumentResolver`: カンマ区切り・複数パラメータ・必須/default を処理
 - `@ValidPerPage` / `PerPageValidator`: 1ページ当たり件数の範囲検証
-- `@SequenceGenerated` / `CustomSequenceGenerator`: Hibernate の sequence ID 生成を設定
+
+Hibernate 6専用だった `@SequenceGenerated` / `CustomSequenceGenerator` はSpring Boot 4版で廃止しました。
+利用側では標準JPAの `@GeneratedValue` / `@SequenceGenerator` を使用します。
 
 引数リゾルバーはクラスを置くだけでは有効になりません。利用側アプリケーションで
 `WebMvcConfigurer#addArgumentResolvers` などを使って登録する必要があります。
@@ -113,7 +116,7 @@ Spring Data の 0 始まりを変換します。また、リフレクション�
 - Spring Data JPA
 - Jakarta Validation
 - Hibernate ORM
-- Jackson
+- Jackson 3
 - Lombok
 - Apache Commons Lang / Collections
 
@@ -127,13 +130,11 @@ Spring Boot/Web/Log4j2 の一部は `provided` ですが、Data JPA、Validation
 3. `@QueryFields` / `@QuerySort` の変更は、未指定、空文字、default、required、ネスト、除外を確認する。
 4. ページング変更では 0 始まり/1 始まり、空ページ、先頭・末尾ページを確認する。
 5. リフレクションを使う処理では、継承フィールド、null、存在しないフィールドを確認する。
-6. Java 21 と現在の Spring Boot/Hibernate の組み合わせで Maven build を通す。
+6. Java 21、Spring Boot 4.1.2、Hibernate 7、Jackson 3の組み合わせでMaven buildを通す。
 7. 公開前に `mvn versions:display-dependency-updates`、配布時に認証済み環境で `mvn deploy` を使う。
 
 ## 現状把握で見えた保守上の注意
 
-- 自動テストがなく、リゾルバー、ページ番号変換、文字列正規化などの回帰を検出しにくい。
-- `common-utils.yaml` は現状一部 DTO のみで、`resource` パッケージ全体を網羅していない。
 - `README.md` に導入方法、利用側の設定例、バージョニング方針がない。
 - `enumuration`, `TokenTimoutException`, `getSortableFiels` など、公開名に綴りの揺れがある。修正は破壊的変更になり得る。
 - utility class の多くは static メソッドのみですが `@Component` も付いており、利用方針が二重になっている。

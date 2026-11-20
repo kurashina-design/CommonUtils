@@ -6,6 +6,28 @@ mvn versions:display-dependency-updates
 mvn deploy
 '''
 
+## 対応環境
+
+- Java 21
+- Spring Boot 4.1.2
+- Spring Framework 7.0.10
+- Spring Data 4.1.2
+- Hibernate ORM 7.4.13.Final
+- Jackson 3.1.7
+
+Spring Boot 3向けの保守版は `boot3-maintenance` ブランチで管理します。Spring Boot 4版では、
+Hibernate 6専用だった `@SequenceGenerated` と `CustomSequenceGenerator` を廃止しています。
+ID生成には標準JPAの `@GeneratedValue` と `@SequenceGenerator` を使用してください。
+また、JacksonのデータバインドAPIはJackson 3の `tools.jackson.*` を使用します。
+`ApiErrorResponseWriter` へ `ObjectMapper` を渡すコードでは、Jackson 3の型を使用してください。
+
+```java
+@Id
+@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "person_id")
+@SequenceGenerator(name = "person_id", sequenceName = "person_id", initialValue = 1, allocationSize = 1)
+private Long id;
+```
+
 ## `@QuerySort`
 
 複数のソート条件は、カンマ区切りまたは同じパラメータの繰り返しで指定できます。両形式の混在も可能です。先頭に `-` を付けた項目は降順になります。

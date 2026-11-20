@@ -1,8 +1,8 @@
 package jp.kurashina.commons.api.error;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import jp.kurashina.commons.web.RequestIdUtils;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
