@@ -37,6 +37,7 @@ API が返す共通 DTO 群です。
 
 - `AbstractAuditResponse`: `createdAt`, `updatedAt`
 - `AbstractEntityResponse`: 監査情報に `id` を追加
+- `AbstractResponse`: エンティティ由来でない手書きのResponseに `NON_EMPTY` を適用する基底クラス
 - `ResultResponse<T>`: `result` と任意の `data`
 - `Pagination<T>`: content、件数、ページ、sort、前後リンクなどのページング情報
 - `PaginationPath`, `PaginationPathParameters`: ページングリンクのパスとクエリ情報
@@ -44,7 +45,8 @@ API が返す共通 DTO 群です。
 - `CountResponse`, `PingResponse`: 小さな定型レスポンス
 
 Jackson の `NON_EMPTY` と snake_case の `@JsonProperty` が外部 API 契約の一部です。
-DTO を変更した場合は `common-utils.yaml` も同期します。
+エンティティ由来のResponseは `AbstractEntityResponse`、それ以外の手書きのResponseは
+`AbstractResponse` を使用します。
 
 ### `annotation` / `annotation.support`
 
