@@ -1,8 +1,16 @@
 # common-utils
 
-Spring Boot で作る社内 API が共通で使う Java ライブラリです。
+Spring Boot と Spring Data JPA で REST API を作るときに使う、共通の Java ライブラリです。ページングとソート、レスポンス項目の指定、共通レスポンス DTO、API エラーレスポンスなどの部品を提供します。
 
-> このプロジェクトは作り直す予定です。現在は保守のみを行っています。
+Kurashina Design のコード生成ツールが出力する Repository / Service / Response のコードも、このライブラリを使います。
+
+## 今後の方針
+
+このライブラリは、OSS として育てていきます。現在は公開に向けて整備している段階です。
+
+- 配布先: 現在は GitHub Packages です。将来は Maven Central(`jp.kurashina`)で公開する予定です。
+- 整備すること: テストと Javadoc の充実、依存関係の見直し、公開範囲の整理、ライセンスの明記。
+- 公開の時期: 未定です。
 
 ## ブランチと対応バージョン
 
