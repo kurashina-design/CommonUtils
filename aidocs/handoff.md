@@ -20,15 +20,14 @@
    - すでに削除された `common-utils.yaml` を前提にしている。
    - `api.error`、`web`（RequestId）、`SortableFields` の記述が無い。
    - `master` 側は version が `-17` のまま（実際は `-22`）。
-2. `README.md` の全面書き直しは `boot4` の作業ツリーで済んでいるが、利用者の確認待ちで未 commit。
-   公開 repository の表示に使われる `master` にも反映するか決める。
+2. `README.md` の全面書き直しは `boot4` に commit・push 済み。利用者の判断で `master` には入れていない
+   （GitHub の公開ページは `master` の古い README のまま）。
 3. テストが無い領域（`QueryFieldsArgumentResolver`、`BeanUtils`、`StringUtils`、
    `DateTimeUtils`、`CorporateNameNormalizer`）にテストを足す。
 
 ### 利用者の判断待ち
 
 - 上の 1. の project-overview.md 更新は、2026-11-24 に利用者が「今はいい」と見送った。
-- README.md 書き直しの commit・push と、`master` への反映。
 - `content-api` / `vehicle-api` の Boot 4 移行時期（移行手順は migration ガイドにある）。
 
 ### 守るルール
@@ -49,6 +48,6 @@
 
 ### 2026-11-24〜28
 
-- 変更: コードの変更なし。`README.md` を全面的に書き直した（未 commit。古い OpenAPI 生成用プロンプトは削除）。この引き継ぎ文書を新規作成し、`AGENTS.md` に引き継ぎルールを追記した。
+- 変更: コードの変更なし。`boot4` の `README.md` を全面的に書き直した（古い OpenAPI 生成用プロンプトは削除。`master` には入れない）。この引き継ぎ文書を新規作成し、`AGENTS.md` に引き継ぎルールを追記した。
 - 確認したこと: `master` と `boot4` のパッケージ構成、`pom.xml`、`aidocs/` の各文書、直近のコミット履歴。
 - 確認していないこと: `mvn test` / `mvn package` は実行していない。
