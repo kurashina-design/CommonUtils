@@ -1,6 +1,7 @@
 package jp.kurashina.commons.util;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -45,10 +46,18 @@ public class CorporateNameNormalizer {
             "管理組合法人"
     );
 
+    /**
+     * 照合用に、長い法人格から順に並べた一覧。
+     * 「医療法人社団」が「医療法人」より先に一致するようにする。
+     */
+    private static final List<String> CORPORATE_TYPES_LONGEST_FIRST = CORPORATE_TYPES.stream()
+            .sorted(Comparator.comparingInt(String::length).reversed())
+            .toList();
+
     private static final Pattern WHITESPACE_PATTERN;
 
     static {
-        String typesRegex = CORPORATE_TYPES.stream()
+        String typesRegex = CORPORATE_TYPES_LONGEST_FIRST.stream()
                 .map(Pattern::quote)
                 .collect(Collectors.joining("|"));
 
@@ -89,7 +98,7 @@ public class CorporateNameNormalizer {
 
     public static String retrieveDisplayName(String corporateName) {
         corporateName = normalizeCorporateName(corporateName);
-        for (String type : CORPORATE_TYPES) {
+        for (String type : CORPORATE_TYPES_LONGEST_FIRST) {
             if (corporateName.contains(type)) {
                 return corporateName.replace(type, "");
             }
