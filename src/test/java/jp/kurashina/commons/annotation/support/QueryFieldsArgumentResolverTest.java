@@ -48,6 +48,10 @@ class QueryFieldsArgumentResolverTest {
     }
 
     @SuppressWarnings("unused")
+    void excludingWildcard(@QueryFields(excluding = {"children.assets.*"}) List<String> fields) {
+    }
+
+    @SuppressWarnings("unused")
     void notAnnotated(List<String> fields) {
     }
 
@@ -127,6 +131,12 @@ class QueryFieldsArgumentResolverTest {
     void excludingDropsPathAndDescendants() throws Exception {
         assertThat(resolve("excluding", request("fields", "id,secret,children[id,assets[id]],secretary")))
                 .containsExactly("children.id", "id", "secretary");
+    }
+
+    @Test
+    void wildcardExcludingBehavesLikePlainExcluding() throws Exception {
+        assertThat(resolve("excludingWildcard", request("fields", "children[id,assets,assets[id],assetsCount]")))
+                .containsExactly("children.assetsCount", "children.id");
     }
 
     @Test

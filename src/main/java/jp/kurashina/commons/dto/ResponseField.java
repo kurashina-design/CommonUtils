@@ -31,10 +31,18 @@ public class ResponseField implements Serializable {
         }
     }
 
+    /**
+     * 深いコピーを作ります。コピーを変更しても元のオブジェクトは変わりません。
+     *
+     * @param responseField コピー元
+     */
     public ResponseField(ResponseField responseField) {
-        this.fields = responseField.getFields();
-        this.rootFields = responseField.getRootFields();
-        this.nestedFields = responseField.getNestedFields();
+        this.fields = new HashSet<>(responseField.getFields());
+        this.rootFields = new HashSet<>(responseField.getRootFields());
+        this.nestedFields = new HashMap<>();
+        responseField.getNestedFields().forEach((key, nested) ->
+                this.nestedFields.put(key, nested == null ? null : new ResponseField(nested)));
+        this.fieldList = new ArrayList<>(responseField.getFieldList());
     }
 
     private Set<String> fields = new HashSet<>();

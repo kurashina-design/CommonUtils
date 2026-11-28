@@ -34,10 +34,15 @@ public @interface QueryFields {
      * 除外するフィールド名のリスト。
      * <p>
      * 指定されたフィールド、およびその配下のネストされたフィールドが抽出リストから除外されます。
-     * 末尾に {@code .*} を付与することで、その階層自体は許可し、配下のみを明示的に禁止する意図を表現できます。
+     * 末尾の {@code .*} は省略できます。付けた場合も付けない場合と同じく、その階層自体も配下も除外します。
      * </p>
-     * * 例: {@code children.assets} を指定した場合、{@code children.assets} および {@code children.assets.id} が除外されます。
-     * * @return 除外対象フィールドの配列
+     * <p>
+     * 例: {@code children.assets} または {@code children.assets.*} を指定した場合、
+     * {@code children.assets} と {@code children.assets.id} の両方が除外されます。
+     * 前方一致ではないため、{@code children.assetsCount} は除外されません。
+     * </p>
+     *
+     * @return 除外対象フィールドの配列
      */
     String[] excluding() default {};
 
