@@ -1,23 +1,46 @@
-'''
-mvn versions:display-dependency-updates
-'''
+# common-utils
 
-'''
-mvn deploy
-'''
+Spring Boot と Spring Data JPA で REST API を作るときに使う、共通の Java ライブラリです。ページングとソート、レスポンス項目の指定、共通レスポンス DTO、API エラーレスポンスなどの部品を提供します。
 
-## `@QuerySort`
+Kurashina Design のコード生成ツールが出力する Repository / Service / Response のコードも、このライブラリを使います。
 
-複数のソート条件は、カンマ区切りまたは同じパラメータの繰り返しで指定できます。両形式の混在も可能です。先頭に `-` を付けた項目は降順になります。
-分割・トリム後に有効なキーが1つも無い場合（例: `sort=,`）は、パラメータが指定されなかった場合と同様に、デフォルト値・必須チェックが適用されます。
+## 今後の方針
+
+このライブラリは、OSS として育てていきます。現在は公開に向けて整備している段階です。
+
+- 配布先: 現在は GitHub Packages です。将来は Maven Central(`jp.kurashina`)で公開する予定です。
+- 整備すること: テストと Javadoc の充実、依存関係の見直し、公開範囲の整理、ライセンスの明記。
+- 公開の時期: 未定です。
+
+## ブランチと対応バージョン
+
+| ブランチ | Spring Boot | 成果物のバージョン |
+| --- | --- | --- |
+| `master` | 3.5 系 | `3.5.13-22` |
+| `boot4` | 4.0 系（Jackson 3） | `4.0.9` |
+
+Java 21 が必要です。成果物は GitHub Packages で配布しています。
+
+## 主な機能
+
+- **共通レスポンス DTO**（`resource`）: `Pagination<T>`、`ResultResponse<T>` など
+- **ページングとソート**: `@QuerySort`、`SortableFields`、`PaginationHelper`
+- **レスポンス項目の指定**: `@QueryFields`（例: `fields=id,children[id,name]`）
+- **API エラーレスポンス**: `ApiErrorResponseFactory`、`ApiErrorResponseWriter`、`RequestIdFilter`
+- **ユーティリティ**: 文字列、日時（和暦を含む）、Bean コピー、法人名の正規化など
+
+## 使い方の例
+
+### ソート
+
+`sort` パラメータは、カンマ区切りでも同じパラメータの繰り返しでも指定できます。先頭に `-` を付けると降順になります。
 
 ```text
 sort=id,-createdDate
 sort=id&sort=-createdDate
-sort=a,b&sort=-c
 ```
 
-`SortableFields` はJPAメタモデルからエンティティごとの許可リストを作成します。利用するには、アプリケーション側でBean登録が必要です。
+ソートできる項目は、JPA メタモデルから作った許可リストで検証します。
 
 ```java
 @Bean
@@ -25,8 +48,6 @@ public SortableFields sortableFields(EntityManagerFactory entityManagerFactory) 
     return new SortableFields(entityManagerFactory);
 }
 ```
-
-ページングでは、検証付きの `PaginationHelper#getPageable` を利用できます。
 
 ```java
 @GetMapping("/page")
@@ -36,52 +57,22 @@ public Pagination<AssetResponse> page(..., @QuerySort(defaultValue = "id") List<
 }
 ```
 
-ページングなしの一覧では、コントローラーで明示的に検証します。
+引数リゾルバーとフィルターは自動では有効になりません。利用側のアプリケーションで Bean として登録してください。
 
-```java
-SortUtils.validateSortKeys(sortList, sortableFields.of(Directory.class));
+## ビルドと公開
+
+```bash
+mvn package
 ```
 
-許可リストは継承属性と単一値の関連・埋め込みの1階層先を含み、コレクション属性と2階層以上のパスを含みません。
+```bash
+mvn deploy
+```
 
-## common-utils.yaml作成依頼プロンプト
+`mvn deploy` には GitHub Packages の認証設定が必要です。
 
-あなたはJava/Springのライブラリ仕様書作成アシスタントです。
-目的は、このプロジェクトの共通レスポンスDTOから OpenAPI スキーマ定義ファイル `common-utils.yaml` を生成/更新することです。
+## ドキュメント
 
-【対象】
-- パッケージ: `jp.kurashina.commons.resource`
-- 対象クラス: response系DTO（abstract含む）
-- Java: 21
-- フレームワーク: Spring Boot / Spring Data JPA / Lombok / jakarta
-
-【出力ルール（厳守）】
-1. 出力は YAML のみ（説明文なし）
-2. ルートは `components.schemas` から始める
-3. 各 schema に `x-java-fqcn` を必ず付与する
-4. Java型→OpenAPI型のマッピングを正確に行う
-   - String -> type: string
-   - int/Integer -> integer, format: int32（Integerは nullable: true）
-   - long/Long -> integer, format: int64（Longは nullable: true）
-   - boolean/Boolean -> boolean（Booleanは nullable: true）
-   - ZonedDateTime -> string, format: date-time
-   - List<T> -> array
-   - Map<String, V> -> object + additionalProperties
-5. Jackson注釈を反映する
-   - `@JsonProperty("per_page")` などのプロパティ名変換を反映
-   - `@JsonInclude(NON_EMPTY)` は required を最小化（原則 required を付けない）
-6. 継承を反映する
-   - 親子関係は `allOf` で表現する
-7. ジェネリクスを反映する
-   - `ResultResponse<T>` などは少なくとも `ResultResponse_Object` を生成
-   - `Pagination<T>` などは少なくとも `Pagination_Object` を生成
-8. enum があれば enum 定義を付ける（例: ASC, DESC）
-9. 既存の `common-utils.yaml` がある場合は、重複を避けて差分更新する
-10. YAML として妥当な構文のみを出力する
-
-【補足方針】
-- 例（example）は妥当な最小限を付ける
-- abstract class も schema として定義する
-- 不明な型は一旦 `type: object` で表現し、`description` に型名を残す
-
-では、現在のコードベースを読み取り、`common-utils.yaml` の最終版を出力してください。
+- [aidocs/project-overview.md](aidocs/project-overview.md): パッケージ構成と設計方針
+- [aidocs/api-error-components.md](aidocs/api-error-components.md): API エラーレスポンス部品
+- [aidocs/spring-boot-4-migration.md](https://github.com/kurashina-design/CommonUtils/blob/boot4/aidocs/spring-boot-4-migration.md): Spring Boot 4 への移行（`boot4` ブランチにあります）
