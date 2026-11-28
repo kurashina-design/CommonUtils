@@ -6,11 +6,11 @@
 主な責務は、API レスポンスの共通形、ページング処理、動的なレスポンス項目・ソート指定、
 JPA/Hibernate 補助、文字列・日時などの汎用処理、業務例外の提供です。
 
-アプリケーション単体ではなく Maven artifact として配布されます。
+アプリケーション単体ではなく Maven artifact として配布されます。OSS として公開する準備を進めています(方針は `README.md` の「今後の方針」)。
 
 - groupId: `jp.kurashina`
 - artifactId: `common-utils`
-- version: `${revision}-17`（現在の `revision` は `3.5.13`）
+- version: `${revision}-22`（現在の `revision` は `3.5.13`）
 - Java: 21
 - Spring Boot: 3.5.13
 - 配布先: GitHub Packages (`kurashina-design/CommonUtils`)
@@ -20,13 +20,14 @@ JPA/Hibernate 補助、文字列・日時などの汎用処理、業務例外の
 | 場所 | 役割 |
 | --- | --- |
 | `src/main/java/jp/kurashina/commons` | 公開ライブラリ実装 |
-| `common-utils.yaml` | 共通レスポンス DTO の OpenAPI schema |
-| `AGENTS.md` | AI が作業するときの指示、公開コマンド、YAML 生成規約 |
-| `aidocs/` | AI 向けの補助ドキュメント |
+| `src/test/java/jp/kurashina/commons` | JUnit のテスト |
+| `README.md` | 利用者向けの説明、使い方の例、ビルドと公開 |
+| `AGENTS.md` | AI が作業するときの指示(このブランチでは空。引き継ぎルールは `boot4` ブランチにある) |
+| `aidocs/` | AI 向けの補助ドキュメント(引き継ぎの正本 `handoff.md` は `boot4` ブランチにある) |
 | `pom.xml` | Java/Spring の依存関係、source/javadoc jar、配布設定 |
 | `target/` | Maven の生成物（編集対象ではない） |
 
-現状、`src/test` はありません。`README.md` も実質的に未整備です。
+テストは `ApiErrorResponseFactoryTest`、`PaginationHelperTest`、`QuerySortArgumentResolverTest`、`RequestIdFilterTest`、`SortUtilsTest`、`SortableFieldsTest` の6クラス です(2026-11-28 時点)。
 
 ## パッケージ別の責務
 
@@ -34,16 +35,16 @@ JPA/Hibernate 補助、文字列・日時などの汎用処理、業務例外の
 
 API が返す共通 DTO 群です。
 
-- `AbstractAuditResponse`: `createdAt`, `updatedAt`
-- `AbstractEntityResponse`: 監査情報に `id` を追加
+- `AbstractAuditResponse`: `createdBy`, `createdDate`, `lastModifiedBy`, `lastModifiedDate`
+- `AbstractEntityResponse`: 監査情報に `version` を追加
 - `ResultResponse<T>`: `result` と任意の `data`
 - `Pagination<T>`: content、件数、ページ、sort、前後リンクなどのページング情報
 - `PaginationPath`, `PaginationPathParameters`: ページングリンクのパスとクエリ情報
 - `CurrentNumberOfElementsMap`: ページ位置と現在件数の対応情報
 - `CountResponse`, `PingResponse`: 小さな定型レスポンス
 
-Jackson の `NON_EMPTY` と snake_case の `@JsonProperty` が外部 API 契約の一部です。
-DTO を変更した場合は `common-utils.yaml` も同期します。
+Jackson の `NON_EMPTY` と、フィールド名そのまま(camelCase)の JSON 名が外部 API 契約の一部です。
+DTO の JSON 名・型・継承を変えると、利用側 API の契約が変わります。
 
 ### `annotation` / `annotation.support`
 
@@ -58,6 +59,18 @@ Spring MVC と Hibernate の拡張点です。
 
 引数リゾルバーはクラスを置くだけでは有効になりません。利用側アプリケーションで
 `WebMvcConfigurer#addArgumentResolvers` などを使って登録する必要があります。
+
+### `api.error` / `web`
+
+API エラーレスポンスの共通部品です。詳細は `aidocs/api-error-components.md` にあります。
+
+- `ApiErrorResponse` / `ApiErrorDetail`: 共通のエラーボディとフィールド単位のエラー
+- `ApiErrorResponseFactory`: 4xx は具体的な detail を残し、5xx は固定文言に置き換える
+- `ApiErrorResponseWriter`: HTTP status、JSON ボディ、`X-Request-Id` ヘッダーを書き出す
+- `RequestIdFilter` / `RequestIdUtils`: 上流の `X-Request-Id` を引き継ぎ、無ければ UUID を作る
+
+`@RestControllerAdvice` や、例外から HTTP status への対応付けは利用側 API に置きます。
+フィルターと Writer は自動登録されないので、利用側で Bean として登録します。
 
 ### `helper`
 
@@ -76,6 +89,7 @@ Spring Data の 0 始まりを変換します。また、リフレクション�
 - `CollectionUtils`, `StringUtils`, `ObjectUtils`: 汎用コレクション・文字列・cast 操作
 - `DateTimeUtils`, `ZoneIdConstants`: Asia/Tokyo・UTC と和暦変換
 - `SortUtils`, `EntityFieldUtils`: Sort 生成と JPA entity のフィールド抽出
+- `SortableFields`: JPA メタモデルから、エンティティごとのソート可能な項目の許可リストを作る(自動登録されないので利用側で Bean 登録する)
 - `ResponseFieldUtils`: `ResponseField` の生成・判定
 - `CorporateNameNormalizer`, `PrefectureUtils`: 日本向けの名称正規化
 - `UserAgentUtils`: User-Agent 候補からランダム選択
@@ -102,7 +116,7 @@ Spring Data の 0 始まりを変換します。また、リフレクション�
 
 1. Controller 引数に `@QuerySort` を付ける
 2. `QuerySortArgumentResolver` が昇順キーと `-` 付き降順キーを解析する
-3. `SortUtils` と `PaginationHelper#getPageable` で Spring Data の問い合わせ条件にする
+3. `SortableFields` の許可リストで検証し、`SortUtils` と `PaginationHelper#getPageable` で Spring Data の問い合わせ条件にする
 4. Repository の `Page<E>` を `PaginationHelper#get` で API レスポンスへ変換する
 
 ## 依存関係の性質
@@ -123,7 +137,7 @@ Spring Boot/Web/Log4j2 の一部は `provided` ですが、Data JPA、Validation
 ## 変更時の確認事項
 
 1. 公開クラス・メソッドの変更は、利用側サービスとのバイナリ/API 互換性を確認する。
-2. `resource` DTO の JSON 名、型、継承を変えたら `common-utils.yaml` を更新する。
+2. `resource` DTO の JSON 名、型、継承を変えるときは、利用側 API の契約変更として扱う。
 3. `@QueryFields` / `@QuerySort` の変更は、未指定、空文字、default、required、ネスト、除外を確認する。
 4. ページング変更では 0 始まり/1 始まり、空ページ、先頭・末尾ページを確認する。
 5. リフレクションを使う処理では、継承フィールド、null、存在しないフィールドを確認する。
@@ -132,21 +146,19 @@ Spring Boot/Web/Log4j2 の一部は `provided` ですが、Data JPA、Validation
 
 ## 現状把握で見えた保守上の注意
 
-- 自動テストがなく、リゾルバー、ページ番号変換、文字列正規化などの回帰を検出しにくい。
-- `common-utils.yaml` は現状一部 DTO のみで、`resource` パッケージ全体を網羅していない。
-- `README.md` に導入方法、利用側の設定例、バージョニング方針がない。
+- テストが無い領域が多い: `ResponseFieldUtils`、`BeanUtils`、`CollectionUtils`、`StringUtils`、`QueryFieldsArgumentResolver`、`DateTimeUtils`、`CorporateNameNormalizer` など。
+- `README.md` に、Spring Boot のバージョンと切り離したバージョニング方針がまだない。
 - `enumuration`, `TokenTimoutException`, `getSortableFiels` など、公開名に綴りの揺れがある。修正は破壊的変更になり得る。
 - utility class の多くは static メソッドのみですが `@Component` も付いており、利用方針が二重になっている。
 - RuntimeException 群は型だけを提供し、HTTP status への対応付けは利用側に委ねられている。
 
 ## AI が次回作業を始めるときの読み順
 
-1. `AGENTS.md`
+1. `boot4` ブランチの `AGENTS.md` と `aidocs/handoff.md` の「いまの状況」
 2. `pom.xml`
 3. 本文書
 4. 変更対象パッケージの実装
-5. DTO を触る場合は `common-utils.yaml`
-6. 利用箇所の確認が必要なら、この repository 外の consumer 側コード
+5. 利用箇所の確認が必要なら、この repository 外の consumer 側コード(事前に利用者の許可を得る)
 
 既存の公開名や JSON 契約を「誤記だから」という理由だけで変更しないでください。
 consumer への影響を確認し、必要なら旧 API を残した段階的移行にします。
