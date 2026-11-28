@@ -93,5 +93,24 @@ class ResponseFieldTest {
         assertThat(copy.getFields()).isEqualTo(original.getFields());
         assertThat(copy.getRootFields()).isEqualTo(original.getRootFields());
         assertThat(copy.getNestedFields()).isEqualTo(original.getNestedFields());
+        assertThat(copy.getFieldList()).isEqualTo(original.getFieldList());
+    }
+
+    @Test
+    void copyConstructorIsDeep() {
+        ResponseField original = new ResponseField(List.of("id", "children.id"));
+
+        ResponseField copy = new ResponseField(original);
+        copy.addField("name");
+        copy.addRootField("name");
+        copy.getNestedField("children").addField("name");
+        copy.addNestedField("owner", "id");
+        copy.getFieldList().add("name");
+
+        assertThat(original.getFields()).containsExactlyInAnyOrder("id", "children");
+        assertThat(original.getRootFields()).containsExactly("id");
+        assertThat(original.getNestedField("children").getFields()).containsExactly("id");
+        assertThat(original.getNestedFieldKeySet()).containsExactly("children");
+        assertThat(original.getFieldList()).containsExactly("id", "children.id");
     }
 }

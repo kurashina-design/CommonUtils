@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * <li>リクエストパラメータから文字列を取得（未指定時はデフォルト値）</li>
  * <li>ブラケット記法（{@code a[b,c]}）をドット記法（{@code a.b, a.c}）に展開</li>
  * <li>{@code maxDepth} による深度（ドット数）制限の適用</li>
- * <li>{@code excluding} による特定パスの除外（ワイルドカード対応）</li>
+ * <li>{@code excluding} による特定パスとその配下の除外（末尾の {@code .*} は省略可）</li>
  * </ol>
  */
 public class QueryFieldsArgumentResolver implements HandlerMethodArgumentResolver {
