@@ -19,13 +19,14 @@
 2. `README.md` の全面書き直しは、`boot4` と `master` の両方に commit・push 済み(`master` には 2026-11-28 に利用者の依頼で入れた)。`master` には `aidocs/spring-boot-4-migration.md` が無いため、そのリンクだけ GitHub の `boot4` ブランチを指している。
 3. 済み(2026-11-28): テストが無かった領域にテストを足した。対象は `ResponseField`、`ResponseFieldUtils`、`BeanUtils`、`CollectionUtils`、`StringUtils`、`DateTimeUtils`、`CorporateNameNormalizer`、`QueryFieldsArgumentResolver` の8クラスで、テストは63件。`boot4` では102件、`master` では100件がすべて成功する。
    - まだテストが無いもの: `EntityFieldUtils`、`PrefectureUtils`、`ObjectUtils`、`UserAgentUtils`、`QueryFields` 以外のアノテーションの検証(`PerPageValidator`)、`resource` の DTO。
-4. テストを書く中で見つかった不具合の疑い(下の「利用者の判断待ち」)を、直すかどうか決める。
+4. テストを書く中で見つかった不具合の疑いのうち、残りの3と4(下の「利用者の判断待ち」)を直すかどうか決める。
 
 ### 利用者の判断待ち
 
-- 不具合の疑い(2026-11-28 に見つけた。コードは未修正で、テストでは今の動作を固定していない):
-  1. `CorporateNameNormalizer.retrieveDisplayName`: `CORPORATE_TYPES` を上から順に探すため、`医療法人社団健康会` は `社団健康会` に、`特定医療法人サンプル会` は `特定サンプル会` になる。長い法人格から先に探す必要がある。
-  2. `CorporateNameNormalizer.normalizeCorporateName`: 正規表現の選択肢が短い `医療法人` に先に当たるため、`医療法人社団 健康会` の空白が残る。
+- 不具合の疑い(2026-11-28 に見つけた。1と2は同日に修正済み。3と4は未修正で、テストでは今の動作を固定していない):
+  1. 修正済み: `CorporateNameNormalizer.retrieveDisplayName` が `医療法人社団健康会` を `社団健康会` にしていた。
+  2. 修正済み: `CorporateNameNormalizer.normalizeCorporateName` で、`医療法人社団 健康会` の空白が残っていた。
+  - 1と2の修正で、利用側の表示名が変わる場合がある。法人格の一部に別の短い法人格を含む名前(医療法人社団、特定医療法人、社会医療法人、地方独立行政法人など)が対象。利用側での影響は確認していない。
   3. `QueryFields.excluding`: Javadoc には「末尾に `.*` を付けると、その階層自体は許可し、配下だけを禁止する」とあるが、実装は `.*` の有無にかかわらず、その階層自体も除外する。直すのは Javadoc と実装のどちらか。
   4. `ResponseField(ResponseField)` コピーコンストラクタ: 浅いコピーのため、コピー側に項目を足すと元のオブジェクトも変わる。
 
@@ -46,6 +47,12 @@
 - 配布先: GitHub Packages `kurashina-design/CommonUtils`。
 
 ## 作業ログ
+
+### 2026-11-28 法人格の照合順の修正
+
+- 変更: 利用者の依頼で、`CorporateNameNormalizer` が長い法人格から先に照合するようにした。`retrieveDisplayName` と、空白除去の正規表現の両方が対象。`getCorporateTypes()` が返す一覧の順番は変えていない。回帰テストを3件追加した。`boot4`(f6ee1c8)と `master`(e2c7f7b)の両方に push した。
+- 確認したこと: `mvn test` は `boot4` で105件、`master` で103件。失敗とエラーは0件。
+- 確認していないこと: 利用側 API で表示名が変わる影響。`retrieveDisplayName(null)` が NullPointerException になる点(以前からの動作で、今回は変えていない)。
 
 ### 2026-11-28 テストの追加
 
