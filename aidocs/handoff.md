@@ -15,18 +15,13 @@
 
 ### 次にやること（順番）
 
-1. 利用者が判断するまで保留: `aidocs/project-overview.md` の古い記述を直す。
-   - 「`src/test` は無い」は誤り（現在は複数のテストクラスがある）。
-   - すでに削除された `common-utils.yaml` を前提にしている。
-   - `api.error`、`web`（RequestId）、`SortableFields` の記述が無い。
-   - `master` 側は version が `-17` のまま（実際は `-22`）。
+1. 済み(2026-11-28): `aidocs/project-overview.md` の古い記述を、`boot4` と `master` の両方で直した。
 2. `README.md` の全面書き直しは、`boot4` と `master` の両方に commit・push 済み(`master` には 2026-11-28 に利用者の依頼で入れた)。`master` には `aidocs/spring-boot-4-migration.md` が無いため、そのリンクだけ GitHub の `boot4` ブランチを指している。
 3. テストが無い領域（`QueryFieldsArgumentResolver`、`BeanUtils`、`StringUtils`、
    `DateTimeUtils`、`CorporateNameNormalizer`）にテストを足す。
 
 ### 利用者の判断待ち
 
-- 上の 1. の project-overview.md 更新は、2026-11-24 に利用者が「今はいい」と見送った。
 - `content-api` / `vehicle-api` の Boot 4 移行時期（移行手順は migration ガイドにある）。
 
 ### 守るルール
@@ -44,6 +39,20 @@
 - 配布先: GitHub Packages `kurashina-design/CommonUtils`。
 
 ## 作業ログ
+
+### 2026-11-28 project-overview.md の更新
+
+- 変更: 利用者の依頼で、`aidocs/project-overview.md` をコードに合わせて直した。`boot4`(9383180)と `master`(0373aee)の両方に push した。
+  - 削除済みの `common-utils.yaml` に関する記述を消した。
+  - 「`src/test` は無い」を、実際のテスト一覧に直した(`boot4` は7クラス、`master` は6クラス)。
+  - 監査項目を実際のフィールド名に直した(`createdBy`/`createdDate`/`lastModifiedBy`/`lastModifiedDate`)。`AbstractEntityResponse` が加えるのは `id` ではなく `version` である。
+  - JSON 名は snake_case ではなく camelCase であることを書いた。
+  - `api.error`、`web`(RequestId)、`SortableFields` の説明を追加した。
+  - `master` の version を `-22` に直した。
+  - 読む順番の先頭を `handoff.md` にした。
+- `master` 固有の違い: `AGENTS.md` が空で、`handoff.md` も無い。そのため `master` の文書では、それらが `boot4` ブランチにあると書いた。
+- 確認したこと: 記述を両ブランチのソースと `pom.xml` に照らし合わせた。
+- 確認していないこと: `mvn test` は実行していない(コードの変更は無い)。
 
 ### 2026-11-28 README の方針の書き直し
 
