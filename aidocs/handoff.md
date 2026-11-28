@@ -11,7 +11,8 @@
   - `boot4`: Spring Boot 4.0.9 / Jackson 3 系。成果物は `4.0.9`。`origin/boot4` と同期済み。
 - `boot4` では `@SequenceGenerated` / `CustomSequenceGenerator` を廃止し、Jakarta 標準の
   `@SequenceGenerator` へ移行した。詳細と利用側の移行表は `aidocs/spring-boot-4-migration.md` にある。
-- コード変更中の作業はない。直近のセッション（2026-11-24〜28）はプロジェクトの俯瞰だけを行った。
+- コード変更中の作業はない。2026-11-28 に、テストの追加と、テストで見つかった不具合4件の修正を、`boot4` と `master` の両方に入れた(詳細は作業ログ)。
+- `mvn test` は `boot4` で107件、`master` で105件がすべて成功する(2026-11-28)。
 
 ### 次にやること（順番）
 
@@ -19,16 +20,15 @@
 2. `README.md` の全面書き直しは、`boot4` と `master` の両方に commit・push 済み(`master` には 2026-11-28 に利用者の依頼で入れた)。`master` には `aidocs/spring-boot-4-migration.md` が無いため、そのリンクだけ GitHub の `boot4` ブランチを指している。
 3. 済み(2026-11-28): テストが無かった領域にテストを足した。対象は `ResponseField`、`ResponseFieldUtils`、`BeanUtils`、`CollectionUtils`、`StringUtils`、`DateTimeUtils`、`CorporateNameNormalizer`、`QueryFieldsArgumentResolver` の8クラスで、テストは63件。`boot4` では102件、`master` では100件がすべて成功する。
    - まだテストが無いもの: `EntityFieldUtils`、`PrefectureUtils`、`ObjectUtils`、`UserAgentUtils`、`QueryFields` 以外のアノテーションの検証(`PerPageValidator`)、`resource` の DTO。
-4. テストを書く中で見つかった不具合の疑いのうち、残りの3と4(下の「利用者の判断待ち」)を直すかどうか決める。
+4. 済み(2026-11-28): テストを書く中で見つかった不具合4件をすべて直した。
+5. 今後: 法人格の処理(`CorporateNameNormalizer`)は spring-repobuilder の生成コードとは関係がないため、別のプロジェクトへ移す予定(2026-11-28 の利用者の見通し)。OSS 公開に向けて公開範囲を整理するときに、`PrefectureUtils` など日本向け・アプリ固有の部品と合わせて検討する。時期と移す先は未定。
 
 ### 利用者の判断待ち
 
-- 不具合の疑い(2026-11-28 に見つけた。1と2は同日に修正済み。3と4は未修正で、テストでは今の動作を固定していない):
-  1. 修正済み: `CorporateNameNormalizer.retrieveDisplayName` が `医療法人社団健康会` を `社団健康会` にしていた。
-  2. 修正済み: `CorporateNameNormalizer.normalizeCorporateName` で、`医療法人社団 健康会` の空白が残っていた。
-  - 1と2の修正で、利用側の表示名が変わる場合がある。法人格の一部に別の短い法人格を含む名前(医療法人社団、特定医療法人、社会医療法人、地方独立行政法人など)が対象。利用側での影響は確認していない。
-  3. `QueryFields.excluding`: Javadoc には「末尾に `.*` を付けると、その階層自体は許可し、配下だけを禁止する」とあるが、実装は `.*` の有無にかかわらず、その階層自体も除外する。直すのは Javadoc と実装のどちらか。
-  4. `ResponseField(ResponseField)` コピーコンストラクタ: 浅いコピーのため、コピー側に項目を足すと元のオブジェクトも変わる。
+- 2026-11-28 に直した不具合4件の、利用側への影響の確認(利用側のリポジトリを見るには、利用者の許可が要る):
+  - `CorporateNameNormalizer`: 法人格の中に短い法人格を含む名前(医療法人社団、特定医療法人、社会医療法人、地方独立行政法人など)で、表示名と正規化の結果が変わる。
+  - `ResponseField` のコピーコンストラクタ: 深いコピーになったので、コピー経由で元のオブジェクトが変わることを前提にしたコードがあれば、動作が変わる。common-utils と spring-repobuilder の生成コードには、このコンストラクタの利用は無い。
+  - `QueryFields.excluding`: 動作は変えていない(Javadoc を実装に合わせただけ)。
 
 - `content-api` / `vehicle-api` の Boot 4 移行時期（移行手順は migration ガイドにある）。
 
@@ -47,6 +47,14 @@
 - 配布先: GitHub Packages `kurashina-design/CommonUtils`。
 
 ## 作業ログ
+
+### 2026-11-28 不具合3・4の修正
+
+- 変更: 利用者の依頼で修正した。`boot4`(8594129)と `master`(640bb36)の両方に push した。
+  - 3: `QueryFields.excluding` は、Javadoc を実装に合わせた。末尾の `.*` は省略でき、付けても付けなくても、その階層自体と配下の両方を除外する。実装を Javadoc に合わせると、今まで除外されていた項目が返るようになり、利用側で情報が多く出てしまうおそれがある。そのため、安全な側の今の動作を正とした。`.*` 付きの動作を確かめるテストを追加した。
+  - 4: `ResponseField(ResponseField)` を深いコピーにした。`fields`、`rootFields`、ネストした項目(再帰的にコピー)、`fieldList` が対象で、以前は `fieldList` はコピーされていなかった。テストを追加した。
+- 確認したこと: `mvn test` は `boot4` で107件、`master` で105件。失敗とエラーは0件。
+- 確認していないこと: 利用側 API への影響。
 
 ### 2026-11-28 法人格の照合順の修正
 
