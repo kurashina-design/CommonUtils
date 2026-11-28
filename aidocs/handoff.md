@@ -17,10 +17,17 @@
 
 1. 済み(2026-11-28): `aidocs/project-overview.md` の古い記述を、`boot4` と `master` の両方で直した。
 2. `README.md` の全面書き直しは、`boot4` と `master` の両方に commit・push 済み(`master` には 2026-11-28 に利用者の依頼で入れた)。`master` には `aidocs/spring-boot-4-migration.md` が無いため、そのリンクだけ GitHub の `boot4` ブランチを指している。
-3. テストが無い領域（`QueryFieldsArgumentResolver`、`BeanUtils`、`StringUtils`、
-   `DateTimeUtils`、`CorporateNameNormalizer`）にテストを足す。
+3. 済み(2026-11-28): テストが無かった領域にテストを足した。対象は `ResponseField`、`ResponseFieldUtils`、`BeanUtils`、`CollectionUtils`、`StringUtils`、`DateTimeUtils`、`CorporateNameNormalizer`、`QueryFieldsArgumentResolver` の8クラスで、テストは63件。`boot4` では102件、`master` では100件がすべて成功する。
+   - まだテストが無いもの: `EntityFieldUtils`、`PrefectureUtils`、`ObjectUtils`、`UserAgentUtils`、`QueryFields` 以外のアノテーションの検証(`PerPageValidator`)、`resource` の DTO。
+4. テストを書く中で見つかった不具合の疑い(下の「利用者の判断待ち」)を、直すかどうか決める。
 
 ### 利用者の判断待ち
+
+- 不具合の疑い(2026-11-28 に見つけた。コードは未修正で、テストでは今の動作を固定していない):
+  1. `CorporateNameNormalizer.retrieveDisplayName`: `CORPORATE_TYPES` を上から順に探すため、`医療法人社団健康会` は `社団健康会` に、`特定医療法人サンプル会` は `特定サンプル会` になる。長い法人格から先に探す必要がある。
+  2. `CorporateNameNormalizer.normalizeCorporateName`: 正規表現の選択肢が短い `医療法人` に先に当たるため、`医療法人社団 健康会` の空白が残る。
+  3. `QueryFields.excluding`: Javadoc には「末尾に `.*` を付けると、その階層自体は許可し、配下だけを禁止する」とあるが、実装は `.*` の有無にかかわらず、その階層自体も除外する。直すのは Javadoc と実装のどちらか。
+  4. `ResponseField(ResponseField)` コピーコンストラクタ: 浅いコピーのため、コピー側に項目を足すと元のオブジェクトも変わる。
 
 - `content-api` / `vehicle-api` の Boot 4 移行時期（移行手順は migration ガイドにある）。
 
@@ -39,6 +46,15 @@
 - 配布先: GitHub Packages `kurashina-design/CommonUtils`。
 
 ## 作業ログ
+
+### 2026-11-28 テストの追加
+
+- 変更: 利用者の依頼で、テスト8クラス(63件)を `src/test` に追加し、`boot4`(05eeb46)と `master`(e16f6a6)の両方に push した。本体のコードは変えていない。対象の本体コードは、両ブランチで同一であることを確認した。
+- 確認したこと:
+  - `mvn test` の結果は、`boot4` で102件(以前は39件)、`master` で100件(以前は37件)。失敗とエラーは0件。
+  - 不具合の疑い1・2・4は、作業用の小さなプログラムで実際の動作を確かめた。3は実装を読んで確かめた。
+- テストの方針: 意図どおりと読み取れる動作だけを確かめた。不具合の疑いがある動作は、テストに固定していない(「利用者の判断待ち」を参照)。
+- 確認していないこと: 利用側の API(`content-api`、`vehicle-api`)での動作。
 
 ### 2026-11-28 project-overview.md の更新
 
