@@ -20,8 +20,7 @@
    - すでに削除された `common-utils.yaml` を前提にしている。
    - `api.error`、`web`（RequestId）、`SortableFields` の記述が無い。
    - `master` 側は version が `-17` のまま（実際は `-22`）。
-2. `README.md` の全面書き直しは `boot4` に commit・push 済み。利用者の判断で `master` には入れていない
-   （GitHub の公開ページは `master` の古い README のまま）。
+2. `README.md` の全面書き直しは、`boot4` と `master` の両方に commit・push 済み(`master` には 2026-11-28 に利用者の依頼で入れた)。`master` には `aidocs/spring-boot-4-migration.md` が無いため、そのリンクだけ GitHub の `boot4` ブランチを指している。
 3. テストが無い領域（`QueryFieldsArgumentResolver`、`BeanUtils`、`StringUtils`、
    `DateTimeUtils`、`CorporateNameNormalizer`）にテストを足す。
 
@@ -50,7 +49,8 @@
 
 - 変更: `boot4` の `README.md` の冒頭だけを書き直した。ライブラリの説明を「社内 API 用」から一般的な説明に変え、「作り直す予定・保守のみ」を削除して「今後の方針」節(OSS として整備中、将来は Maven Central `jp.kurashina` で公開予定、時期は未定)を加えた。利用者の依頼による。
 - 確認したこと: README 以外の文書に「社内」「保守のみ」の記述が無いこと。
-- 確認していないこと: `master` には入れていない(GitHub の公開ページは `master` の古い README のまま)。コードの変更は無いため、`mvn test` は実行していない。
+- 追記: 利用者の依頼で、同じ README を `master` にも入れて push した(29ea3b1)。移行ガイドへのリンクだけ、GitHub の `boot4` ブランチを指すように変えた。README に書いた機能(`RequestIdFilter`、`ApiErrorResponseFactory`、`SortableFields`、`@QueryFields` など)が `master` にもあることは確認済み。
+- 確認していないこと: コードの変更は無いため、`mvn test` は実行していない。
 
 ### 2026-11-24〜28
 
